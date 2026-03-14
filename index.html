@@ -351,14 +351,16 @@ async function getNextVersion(prefix,pat,username){
   _versionCounters[prefix]=best+1;return _versionCounters[prefix];
 }
 
-async function saveVersionedFile(prefix,content,pat,username){
-  const existing=await ghListFiles(username,CONFIG_REPO,'',pat);
-  const oldVersions=existing.filter(f=>f.name.startsWith(prefix)&&f.type==='file');
+async function saveVersionedFile(prefix,content,pat,username,oldFilename){
   const newNum=await getNextVersion(prefix,pat,username);
   const newFilename=`${prefix}${newNum}.enc`;
   const bytes=typeof content==='string'?new TextEncoder().encode(content):content;
   await ghUploadFile(username,CONFIG_REPO,newFilename,bytes,pat);
-  for(const f of oldVersions){try{await ghDeleteFile(username,CONFIG_REPO,f.name,pat)}catch(e){console.warn('del old:',e.message)}}
+  // Delete previous version by exact filename — no directory scan, no cache issues
+  if(oldFilename&&oldFilename!==newFilename){
+    try{await ghDeleteFile(username,CONFIG_REPO,oldFilename,pat)}
+    catch(e){console.warn('del old:',e.message)}
+  }
   return newFilename;
 }
 
@@ -489,7 +491,8 @@ async function loadFolderMeta(folderId){
 async function saveFolderMeta(meta){
   const{pat,key,username}=session;
   meta.updatedAt=Date.now();
-  const newFilename=await saveVersionedFile(folderPrefix(meta.id),await encryptText(JSON.stringify({...meta,_filename:undefined}),key),pat,username);
+  const oldFilename=meta._filename||null;
+  const newFilename=await saveVersionedFile(folderPrefix(meta.id),await encryptText(JSON.stringify({...meta,_filename:undefined}),key),pat,username,oldFilename);
   meta._filename=newFilename;_folderMetaCache[meta.id]=meta;return meta;
 }
 
@@ -615,7 +618,6 @@ async function uploadFiles(files){
     itemEl.className='upload-item';
     itemEl.innerHTML=`<div class="upload-item-name">${escHtml(file.name)}</div><div class="upload-progress-bar"><div class="upload-progress-fill" id="upfill_${uid}" style="width:0%"></div></div><div class="upload-status" id="upstat_${uid}">Preparing...</div>`;
     list.appendChild(itemEl);
-    // Store direct element references — immune to DOM changes
     const fillEl=itemEl.querySelector(`#upfill_${uid}`);
     const statEl=itemEl.querySelector(`#upstat_${uid}`);
     const progress=(pct,status)=>{if(fillEl)fillEl.style.width=pct+'%';if(statEl)statEl.textContent=status};
@@ -628,6 +630,10 @@ async function uploadFiles(files){
       if(statEl)statEl.textContent='✗ '+e.message;
     }
   }
+  // Save folder metadata and config ONCE after all files are done
+  await saveFolderMeta(currentFolderMeta);
+  await saveConfig();
+  updateStats();
   await loadFolder(currentFolderMeta.id);
 }
 
@@ -650,15 +656,12 @@ async function uploadSingleFile(file,progress){
     chunks.push({chunkIndex:i,repoName:repoInfo.name,filename:chunkFilename});
     progress(Math.round(((i+1)/numChunks)*90),`${i+1} / ${numChunks} chunks uploaded`);
   }
+  // Just build the file entry and add to in-memory folder meta — no saving yet
   const fileEntry={id:fileId,name:file.name,size:totalSize,mimeType:file.type||'application/octet-stream',numChunks,chunks,createdAt:Date.now(),updatedAt:Date.now()};
   if(!currentFolderMeta.files)currentFolderMeta.files=[];
   currentFolderMeta.files.push(fileEntry);
-  progress(95,'Saving metadata...');
-  await saveFolderMeta(currentFolderMeta);
   session.config.totalFiles=(session.config.totalFiles||0)+1;
   session.config.totalSize=(session.config.totalSize||0)+totalSize;
-  await saveConfig();
-  updateStats();
   progress(100,'Complete');
 }
 
@@ -677,7 +680,8 @@ async function ensureDataRepo(){
 }
 async function saveConfig(){
   const{pat,key,username,config}=session;
-  session.configFilename=await saveVersionedFile(CONFIG_FILE_PREFIX,await encryptText(JSON.stringify(config),key),pat,username);
+  const oldFilename=session.configFilename||null;
+  session.configFilename=await saveVersionedFile(CONFIG_FILE_PREFIX,await encryptText(JSON.stringify(config),key),pat,username,oldFilename);
 }
 
 // ── IMAGE PREVIEW ─────────────────────────────────────────────────
@@ -722,30 +726,71 @@ async function previewImage(fileEntry){
 }
 
 // ── DOWNLOAD ──────────────────────────────────────────────────────
+// Streams each decrypted chunk directly to disk via File System Access API (Chrome/Edge).
+// Falls back to in-memory Blob for Firefox/Safari — peak RAM = file size, not 2x.
 async function downloadFile(fileEntry){
   const{pat,key,username}=session;
-  const chunks=fileEntry.chunks||[];
-  // Collect decrypted chunks as separate Uint8Arrays — never merge into one giant buffer
-  const decryptedChunks=[];
+  const sorted=[...(fileEntry.chunks||[])].sort((a,b)=>a.chunkIndex-b.chunkIndex);
+  const mime=fileEntry.mimeType||'application/octet-stream';
+
   showModal(`<h3>Downloading ${escHtml(fileEntry.name)}</h3><div class="upload-progress-bar" style="margin:1rem 0"><div class="upload-progress-fill" id="dl-fill" style="width:0%"></div></div><div id="dl-stat" style="font-size:0.8rem;color:var(--text3)">Starting...</div>`);
-  try{
-    const sorted=[...chunks].sort((a,b)=>a.chunkIndex-b.chunkIndex);
-    for(let i=0;i<sorted.length;i++){
-      const chunk=sorted[i];
-      document.getElementById('dl-stat').textContent=`Chunk ${i+1}/${sorted.length}...`;
-      const encBytes=await ghGetFileRaw(username,chunk.repoName,chunk.filename,pat);
-      const decBytes=await decryptData(encBytes,key);
-      decryptedChunks.push(decBytes);
-      document.getElementById('dl-fill').style.width=Math.round(((i+1)/sorted.length)*100)+'%';
+
+  const setProgress=(pct,msg)=>{
+    const f=document.getElementById('dl-fill');
+    const s=document.getElementById('dl-stat');
+    if(f)f.style.width=pct+'%';
+    if(s)s.textContent=msg;
+  };
+
+  // ── PATH A: File System Access API (Chrome/Edge) — true streaming, any file size ──
+  if(window.showSaveFilePicker){
+    let writable;
+    try{
+      const handle=await window.showSaveFilePicker({suggestedName:fileEntry.name,types:[{description:'File',accept:{[mime]:[]}}]});
+      writable=await handle.createWritable();
+      for(let i=0;i<sorted.length;i++){
+        setProgress(Math.round((i/sorted.length)*100),`Chunk ${i+1}/${sorted.length}...`);
+        const enc=await ghGetFileRaw(username,sorted[i].repoName,sorted[i].filename,pat);
+        const dec=await decryptData(enc,key);
+        await writable.write(dec);
+        // dec is now eligible for GC — RAM stays flat at ~60MB throughout
+      }
+      await writable.close();
+      setProgress(100,'✓ Download complete!');
+      setTimeout(closeModal,1500);
+      return;
+    }catch(e){
+      // User cancelled the save picker — abort cleanly
+      if(e.name==='AbortError'){
+        if(writable)try{await writable.abort()}catch{}
+        closeModal();
+        return;
+      }
+      // Any other error — fall through to Blob fallback
+      if(writable)try{await writable.abort()}catch{}
+      console.warn('Streaming download failed, falling back to Blob:',e.message);
     }
-    // Pass the array of chunks directly to Blob — no merging, no 2GB limit
-    const blob=new Blob(decryptedChunks,{type:fileEntry.mimeType||'application/octet-stream'});
+  }
+
+  // ── PATH B: Blob fallback (Firefox, Safari) — all chunks in RAM then trigger download ──
+  try{
+    const decryptedChunks=[];
+    for(let i=0;i<sorted.length;i++){
+      setProgress(Math.round(((i+1)/sorted.length)*90),`Chunk ${i+1}/${sorted.length}...`);
+      const enc=await ghGetFileRaw(username,sorted[i].repoName,sorted[i].filename,pat);
+      const dec=await decryptData(enc,key);
+      decryptedChunks.push(dec);
+    }
+    setProgress(95,'Preparing file...');
+    const blob=new Blob(decryptedChunks,{type:mime});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');a.href=url;a.download=fileEntry.name;a.click();
     URL.revokeObjectURL(url);
-    document.getElementById('dl-stat').textContent='✓ Download complete!';
+    setProgress(100,'✓ Download complete!');
     setTimeout(closeModal,1500);
-  }catch(e){document.getElementById('dl-stat').textContent='✗ Error: '+e.message}
+  }catch(e){
+    setProgress(0,'✗ Error: '+e.message);
+  }
 }
 
 // ── DELETE ────────────────────────────────────────────────────────
