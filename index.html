@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=1280">
 <title>Git Archive</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
@@ -14,109 +14,10 @@
     --card:#1c1c2a;--card2:#222233;--glow:rgba(124,111,255,0.18);
   }
   *{box-sizing:border-box;margin:0;padding:0;border-radius:0!important}
-  /* zoom:1.1 replaced with font-size scaling — works on all devices including mobile */
-  body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;font-size:110%}
-
-  /* ── TABLET (≤900px) ──────────────────────────────────────── */
-  @media(max-width:900px){
-    .content{padding:1rem 1.2rem}
-    .file-list-header{grid-template-columns:1fr 100px 40px}
-    .file-list-header span:nth-child(3){display:none}
-    .file-card{grid-template-columns:1fr 100px 40px}
-    .file-date-cell{display:none}
-    .storage-bar-wrap{display:none}
-  }
-
-  /* ── MOBILE (≤600px) ──────────────────────────────────────── */
-  @media(max-width:600px){
-    html{font-size:15px}
-    body{font-size:1rem}
-
-    /* Auth */
-    .auth-screen{padding:1.5rem 0.75rem}
-    .auth-box{padding:1.5rem 1.1rem}
-    .auth-title{font-size:1.3rem}
-
-    /* Topbar */
-    .topbar{padding:0 0.75rem;gap:0.4rem;height:50px}
-    .logo-text{font-size:1rem}
-    .topbar-path{font-size:0.65rem;min-width:0;overflow:hidden}
-    .user-chip{padding:0.25rem 0.55rem;font-size:0.68rem;gap:0.3rem;white-space:nowrap}
-
-    /* Content */
-    .content{padding:0.6rem}
-
-    /* Stats bar */
-    .stats-bar{gap:1rem;padding:0.6rem 0.75rem;margin-bottom:0.6rem}
-    .stat-val{font-size:0.9rem}
-    .stat-label{font-size:0.55rem}
-    .tag-enc{display:none}
-
-    /* Toolbar */
-    .toolbar{gap:0.35rem;margin-bottom:0.6rem}
-    .toolbar-btn{flex:1;justify-content:center;padding:0.55rem 0.4rem;font-size:0.7rem;min-height:40px;white-space:nowrap}
-    .storage-bar-wrap{display:none}
-
-    /* File list header — name column takes all space, fixed menu column */
-    .file-list-header{
-      grid-template-columns:minmax(0,1fr) 36px;
-      padding:0.35rem 0.5rem
-    }
-    .file-list-header span:nth-child(2),
-    .file-list-header span:nth-child(3){display:none}
-
-    /* File cards — critical: name cell must get minmax(0,1fr) not just 1fr */
-    .file-card{
-      grid-template-columns:minmax(0,1fr) 36px;
-      padding:0.65rem 0.5rem
-    }
-    .file-size-cell{display:none}
-    .file-date-cell{display:none}
-
-    /* Name cell — overflow must be constrained */
-    .file-card-name-cell{min-width:0;overflow:hidden}
-    .file-name{font-size:0.78rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .file-type-icon{flex-shrink:0;width:18px;height:18px}
-    .file-type-icon svg{width:14px;height:14px}
-
-    /* Always show menu on touch */
-    .file-card-menu{opacity:1;width:36px;height:36px;font-size:16px;flex-shrink:0}
-
-    /* Context menu — big touch targets */
-    .ctx-menu{min-width:175px}
-    .ctx-item{padding:0.75rem 0.9rem;font-size:0.85rem;min-height:44px}
-
-    /* Modal */
-    .modal-overlay{padding:0.4rem;align-items:flex-end}
-    .modal{padding:1.25rem;max-width:100%;width:100%}
-    .modal h3{font-size:0.95rem}
-    .modal.img-preview{max-width:100vw;max-height:100dvh;align-items:stretch}
-    .img-preview-body img{max-height:65vh}
-
-    /* Upload panel — full width pinned bottom */
-    .upload-panel{left:0;right:0;bottom:0;width:100%;border-left:none;border-right:none;border-bottom:none}
-    #upload-list{max-height:180px}
-
-    /* Inputs and buttons — good touch targets */
-    .btn{padding:0.85rem;font-size:0.85rem;min-height:46px}
-    .field input{padding:0.75rem 0.9rem;font-size:0.85rem;min-height:46px}
-
-    /* Empty/loading */
-    .empty-state{padding:2.5rem 0.75rem}
-    .loading-state{padding:2.5rem 0.75rem}
-  }
-
-  /* ── VERY SMALL (≤380px) ──────────────────────────────────── */
-  @media(max-width:380px){
-    html{font-size:14px}
-    .topbar-path{display:none}
-    .auth-box{padding:1.1rem 0.9rem}
-    .toolbar-btn{font-size:0.65rem;padding:0.5rem 0.3rem}
-    .stats-bar{gap:0.75rem}
-  }
+  body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;zoom:1.1}
   body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 30% 20%,rgba(124,111,255,0.07) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,rgba(52,217,240,0.05) 0%,transparent 50%);pointer-events:none;z-index:0}
   #app{position:relative;z-index:1}
-  .auth-screen{display:flex;min-height:100vh;min-height:100dvh;align-items:flex-start;justify-content:center;padding:6vh 2rem 2rem}
+  .auth-screen{display:flex;min-height:100vh;align-items:flex-start;justify-content:center;padding:6vh 2rem 2rem}
   .auth-box{width:100%;max-width:460px;background:var(--card);border:1px solid var(--border);padding:2.5rem;box-shadow:0 0 80px rgba(124,111,255,0.1),0 2px 0 rgba(255,255,255,0.04) inset;animation:fadeUp 0.4s ease}
   @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
   .logo{display:flex;align-items:center;gap:0.5rem;margin-bottom:2rem}
@@ -145,7 +46,7 @@
   .msg-success{background:rgba(61,219,168,0.08);border-color:var(--success);color:var(--success)}
   .msg-info{background:rgba(124,111,255,0.08);border-color:var(--accent);color:var(--accent2)}
   .msg-warn{background:rgba(251,191,36,0.08);border-color:var(--warn);color:var(--warn)}
-  #main-app{display:none;flex-direction:column;min-height:100vh;min-height:100dvh}
+  #main-app{display:none;flex-direction:column;min-height:100vh}
   #main-app.active{display:flex}
   .topbar{height:54px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.5rem;gap:1rem;position:sticky;top:0;z-index:100}
   .topbar .logo{margin-bottom:0}
@@ -167,7 +68,7 @@
   .storage-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent3));transition:width 0.3s}
   .file-list-header{display:grid;grid-template-columns:1fr 120px 140px 40px;padding:0.4rem 0.75rem;border-bottom:1px solid var(--border);font-size:0.68rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;background:var(--bg2)}
   .file-grid{display:flex;flex-direction:column;border:1px solid var(--border)}
-  .file-card{display:grid;grid-template-columns:1fr 120px 140px 40px;align-items:center;padding:0.65rem 0.75rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.12s;background:var(--card);animation:fadeUp 0.2s ease;position:relative;user-select:none}
+  .file-card{display:grid;grid-template-columns:1fr 120px 140px 40px;align-items:center;padding:0.65rem 0.75rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.12s;background:var(--card);animation:fadeUp 0.2s ease;position:relative;user-select:none;touch-action:manipulation}
   .file-card:last-child{border-bottom:none}
   .file-card:hover{background:var(--card2)}
   .file-card.selected{background:rgba(124,111,255,0.1);border-bottom-color:rgba(124,111,255,0.2)}
@@ -895,10 +796,10 @@ function showItemMenu(event,itemId,itemType){
     },true);
   }
   menu.classList.remove('hidden');
-  const menuW=180;
-  const menuH=menu.children.length*44+8;
-  const x=Math.min(event.clientX, window.innerWidth-menuW-8);
-  const y=Math.min(event.clientY+4, window.innerHeight-menuH-8);
+  const menuW=180,menuH=menu.children.length*36+8;
+  const vw=window.innerWidth/1.1,vh=window.innerHeight/1.1;
+  const x=Math.min(event.clientX/1.1,vw-menuW-8);
+  const y=Math.min(event.clientY/1.1,vh-menuH-8);
   menu.style.left=x+'px';
   menu.style.top=y+'px';
 }
