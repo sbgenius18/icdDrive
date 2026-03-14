@@ -3,324 +3,280 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IceDrive</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<title>Git Archive</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
   :root {
-    --bg: #0a0a0f;
-    --surface: #111118;
-    --surface2: #1a1a24;
-    --border: #2a2a3a;
-    --accent: #00e5ff;
-    --accent2: #7c3aed;
-    --accent3: #10b981;
-    --danger: #ef4444;
-    --warn: #f59e0b;
-    --text: #e2e8f0;
-    --muted: #64748b;
-    --font-head: 'JetBrains Mono', monospace;
-    --font-mono: 'JetBrains Mono', monospace;
+    --bg:#12121a;--bg2:#1a1a26;--bg3:#222230;--border:#35354d;
+    --accent:#7c6fff;--accent2:#b69fff;--accent3:#34d9f0;
+    --danger:#ff6b6b;--success:#3ddba8;--warn:#fbbf24;
+    --text:#eeeef5;--text2:#a9aac4;--text3:#6b6c8a;
+    --card:#1c1c2a;--card2:#222233;--glow:rgba(124,111,255,0.18);
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 15px;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-  body::before {
-    content:'';
-    position:fixed; inset:0;
-    background-image:
-      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events:none; z-index:0;
-  }
-  #app { position:relative; z-index:1; }
+  *{box-sizing:border-box;margin:0;padding:0;border-radius:0!important}
+  /* zoom:1.1 replaced with font-size scaling — works on all devices including mobile */
+  body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;font-size:110%}
 
-  .auth-wrap {
-    min-height:100vh; display:flex; align-items:center; justify-content:center;
-    padding:2rem;
+  /* ── TABLET (≤900px) ──────────────────────────────────────── */
+  @media(max-width:900px){
+    .content{padding:1rem 1.2rem}
+    .file-list-header{grid-template-columns:1fr 100px 40px}
+    .file-list-header span:nth-child(3){display:none}
+    .file-card{grid-template-columns:1fr 100px 40px}
+    .file-date-cell{display:none}
+    .storage-bar-wrap{display:none}
   }
-  .auth-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    width: 100%; max-width: 480px;
-    overflow: hidden;
-    box-shadow: 0 0 60px rgba(0,229,255,0.05), 0 0 120px rgba(124,58,237,0.05);
-  }
-  .auth-header {
-    padding: 2.5rem 2.5rem 2rem;
-    border-bottom: 1px solid var(--border);
-    background: linear-gradient(135deg, rgba(0,229,255,0.05), rgba(124,58,237,0.05));
-  }
-  .logo {
-    font-family: var(--font-head);
-    font-weight: 800;
-    font-size: 1.9rem;
-    letter-spacing: -0.02em;
-    color: var(--accent);
-    margin-bottom: 0.5rem;
-  }
-  .auth-header p { color: var(--muted); font-size: 0.84rem; }
-  .auth-body { padding: 2.5rem; }
-  .tabs { display:flex; gap:0; margin-bottom:2rem; border:1px solid var(--border); border-radius:2px; overflow:hidden; }
-  .tab-btn {
-    flex:1; padding:0.7rem; background:transparent; border:none;
-    color:var(--muted); font-family:var(--font-mono); font-size:0.86rem;
-    cursor:pointer; transition:all 0.2s; letter-spacing:0.05em;
-  }
-  .tab-btn.active { background:var(--accent); color:#000; font-weight:700; }
-  .form-group { margin-bottom:1.2rem; }
-  label { display:block; font-size:0.74rem; color:var(--muted); margin-bottom:0.4rem; letter-spacing:0.08em; text-transform:uppercase; }
-  input[type=text], input[type=password] {
-    width:100%; padding:0.75rem 1rem;
-    background:var(--bg); border:1px solid var(--border);
-    border-radius:2px; color:var(--text);
-    font-family:var(--font-mono); font-size:0.9rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    outline:none;
-  }
-  input:focus { border-color:var(--accent); box-shadow:0 0 0 2px rgba(0,229,255,0.1); }
-  .input-hint { font-size:0.72rem; color:var(--muted); margin-top:0.35rem; }
-  .btn {
-    display:inline-flex; align-items:center; gap:0.5rem;
-    padding:0.75rem 1.5rem; border:none; border-radius:2px;
-    font-family:var(--font-mono); font-size:0.88rem; font-weight:700;
-    cursor:pointer; transition:all 0.2s; letter-spacing:0.05em;
-    text-transform:uppercase;
-  }
-  .btn-primary { background:var(--accent); color:#000; width:100%; justify-content:center; }
-  .btn-primary:hover { background:#fff; }
-  .btn-danger { background:var(--danger); color:#fff; }
-  .btn-danger:hover { background:#dc2626; }
-  .btn-ghost {
-    background:transparent; color:var(--text);
-    border:1px solid var(--border); padding:0.5rem 1rem;
-    font-size:0.8rem;
-  }
-  .btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
-  .btn-sm { padding:0.4rem 0.85rem; font-size:0.78rem; }
-  .btn:disabled { opacity:0.4; cursor:not-allowed; }
-  .alert {
-    padding:0.75rem 1rem; border-radius:2px; font-size:0.83rem;
-    margin-bottom:1rem; border-left:3px solid;
-  }
-  .alert-error { background:rgba(239,68,68,0.1); border-color:var(--danger); color:#fca5a5; }
-  .alert-success { background:rgba(16,185,129,0.1); border-color:var(--accent3); color:#6ee7b7; }
-  .alert-info { background:rgba(0,229,255,0.08); border-color:var(--accent); color:var(--accent); }
 
-  #main-app { display:none; min-height:100vh; flex-direction:column; }
-  #main-app.active { display:flex; }
-  .topbar {
-    background:var(--surface); border-bottom:1px solid var(--border);
-    padding:0 2rem; height:56px; display:flex; align-items:center;
-    justify-content:space-between; position:sticky; top:0; z-index:100;
-  }
-  .topbar-logo { font-family:var(--font-head); font-weight:800; color:var(--accent); font-size:1.25rem; letter-spacing:-0.02em; }
-  .topbar-user { display:flex; align-items:center; gap:1rem; }
-  .user-badge {
-    font-size:0.77rem; color:var(--muted);
-    background:var(--surface2); border:1px solid var(--border);
-    padding:0.3rem 0.75rem; border-radius:2px;
-  }
-  .user-badge span { color:var(--accent); }
-  .app-body { display:flex; flex:1; }
+  /* ── MOBILE (≤600px) ──────────────────────────────────────── */
+  @media(max-width:600px){
+    /* Reset font scaling — viewport meta handles it */
+    html{font-size:14px}
+    body{font-size:1rem}
 
-  .main-content { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-  .content-header {
-    padding:1.25rem 2rem; border-bottom:1px solid var(--border);
-    display:flex; align-items:center; gap:1rem; background:var(--surface);
-    flex-wrap:wrap;
-  }
-  .breadcrumb { display:flex; align-items:center; gap:0.3rem; font-size:0.86rem; flex:1; }
-  .breadcrumb-item { color:var(--muted); cursor:pointer; }
-  .breadcrumb-item:hover { color:var(--accent); }
-  .breadcrumb-item.current { color:var(--text); cursor:default; }
-  .breadcrumb-sep { color:var(--border); }
-  .header-actions { display:flex; gap:0.5rem; align-items:center; }
-  .file-list { flex:1; overflow-y:auto; padding:1.5rem 2rem; }
-  .file-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:1rem; }
-  .file-card {
-    background:var(--surface); border:1px solid var(--border); border-radius:2px;
-    padding:1rem; cursor:pointer; transition:all 0.15s; position:relative;
-  }
-  .file-card:hover { border-color:var(--accent); box-shadow:0 0 20px rgba(0,229,255,0.08); }
-  .file-icon { font-size:2rem; margin-bottom:0.5rem; display:block; }
-  .file-name { font-size:0.83rem; color:var(--text); word-break:break-all; margin-bottom:0.25rem; }
-  .file-meta { font-size:0.73rem; color:var(--muted); }
-  .file-actions-hover {
-    position:absolute; top:0.5rem; right:0.5rem;
-    display:none; gap:0.25rem;
-  }
-  .file-card:hover .file-actions-hover { display:flex; }
-  .icon-btn {
-    width:26px; height:26px; border:none; border-radius:2px;
-    background:var(--surface2); color:var(--muted); cursor:pointer;
-    display:flex; align-items:center; justify-content:center; font-size:0.75rem;
-    transition:all 0.15s;
-  }
-  .icon-btn:hover { background:var(--accent); color:#000; }
-  .icon-btn.del:hover { background:var(--danger); color:#fff; }
-  .empty-state {
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    height:300px; color:var(--muted); gap:1rem; text-align:center;
-  }
-  .empty-icon { font-size:3rem; opacity:0.3; }
-  .empty-state p { font-size:0.87rem; }
+    /* Auth */
+    .auth-screen{padding:1.5rem 0.75rem}
+    .auth-box{padding:1.5rem 1.25rem}
+    .auth-title{font-size:1.3rem}
 
-  .drop-overlay {
-    position:fixed; inset:0; background:rgba(0,0,0,0.85);
-    z-index:1000; display:none; align-items:center; justify-content:center;
-    border:3px dashed var(--accent);
+    /* Login page title above box */
+    #screen-login > div > div:first-child > div:first-child{font-size:1.6rem!important}
+
+    /* Topbar */
+    .topbar{padding:0 0.75rem;gap:0.5rem;height:50px}
+    .logo-text{font-size:1rem}
+    .topbar-path{font-size:0.65rem;max-width:35vw}
+    .user-chip{padding:0.25rem 0.6rem;font-size:0.68rem;gap:0.3rem}
+
+    /* Content */
+    .content{padding:0.75rem}
+
+    /* Stats bar — tighter */
+    .stats-bar{gap:1rem;padding:0.6rem 0.75rem;margin-bottom:0.75rem}
+    .stat-val{font-size:0.85rem}
+    .stat-label{font-size:0.55rem}
+    .tag-enc{display:none}
+
+    /* Toolbar — buttons fill row */
+    .toolbar{gap:0.4rem;margin-bottom:0.75rem}
+    .toolbar-btn{flex:1;justify-content:center;padding:0.55rem 0.5rem;font-size:0.72rem;min-height:40px}
+    .storage-bar-wrap{display:none}
+
+    /* File list — name + menu only */
+    .file-list-header{grid-template-columns:1fr 40px;padding:0.35rem 0.6rem}
+    .file-list-header span:nth-child(2),
+    .file-list-header span:nth-child(3){display:none}
+    .file-card{grid-template-columns:1fr 40px;padding:0.7rem 0.6rem}
+    .file-size-cell{display:none}
+    .file-date-cell{display:none}
+    .file-name{font-size:0.8rem}
+
+    /* Always show menu button on touch — no hover */
+    .file-card-menu{opacity:1;width:36px;height:36px;font-size:16px}
+
+    /* Context menu — big touch targets */
+    .ctx-menu{min-width:180px}
+    .ctx-item{padding:0.8rem 1rem;font-size:0.85rem;min-height:44px}
+
+    /* Modal — full width, no side gaps */
+    .modal-overlay{padding:0.5rem}
+    .modal{padding:1.25rem;max-width:100%}
+    .modal h3{font-size:0.95rem}
+    .modal.img-preview{max-width:100vw;max-height:100dvh}
+    .img-preview-body img{max-height:70vh}
+
+    /* Upload panel — full width pinned to bottom */
+    .upload-panel{left:0;right:0;bottom:0;width:100%;border-left:none;border-right:none;border-bottom:none;border-radius:0!important}
+    #upload-list{max-height:200px}
+
+    /* Buttons — larger touch targets */
+    .btn{padding:0.9rem;font-size:0.88rem;min-height:48px}
+    .field input{padding:0.75rem 0.9rem;font-size:0.85rem;min-height:48px}
+
+    /* Empty/loading states */
+    .empty-state{padding:2.5rem 1rem}
+    .loading-state{padding:2.5rem 1rem}
+
+    /* Breadcrumb path — truncate gracefully */
+    .topbar-path{overflow:hidden;text-overflow:ellipsis}
+    .path-seg{max-width:80px;overflow:hidden;text-overflow:ellipsis}
   }
-  .drop-overlay.active { display:flex; }
-  .drop-msg { font-family:var(--font-head); font-size:2rem; color:var(--accent); text-align:center; }
 
-  .modal-backdrop {
-    position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:500;
-    display:none; align-items:center; justify-content:center; padding:1rem;
+  /* ── VERY SMALL (≤380px) ──────────────────────────────────── */
+  @media(max-width:380px){
+    html{font-size:13px}
+    .topbar-path{display:none}
+    .auth-box{padding:1.25rem 1rem}
+    .toolbar-btn{font-size:0.68rem;padding:0.5rem 0.35rem}
   }
-  .modal-backdrop.active { display:flex; }
-  .modal {
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:2px; width:100%; max-width:480px; overflow:auto; max-height:80vh;
-  }
-  .modal-head {
-    padding:1.25rem 1.5rem; border-bottom:1px solid var(--border);
-    display:flex; align-items:center; justify-content:space-between;
-    background:var(--surface2);
-  }
-  .modal-title { font-family:var(--font-head); font-weight:700; font-size:1.05rem; }
-  .modal-body { padding:1.5rem; }
-  .modal-foot { padding:1rem 1.5rem; border-top:1px solid var(--border); display:flex; gap:0.5rem; justify-content:flex-end; }
-
-  .progress-wrap { margin-top:1rem; }
-  .progress-label { display:flex; justify-content:space-between; font-size:0.77rem; color:var(--muted); margin-bottom:0.35rem; }
-  .progress-track { height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; }
-  .progress-fill { height:100%; background:linear-gradient(90deg, var(--accent), var(--accent2)); border-radius:3px; transition:width 0.3s; }
-  .progress-log {
-    margin-top:0.75rem; background:var(--bg); border:1px solid var(--border);
-    border-radius:2px; padding:0.75rem; max-height:150px; overflow-y:auto;
-    font-size:0.75rem; color:var(--muted); font-family:var(--font-mono);
-  }
-  .log-line { margin-bottom:0.2rem; }
-  .log-line.ok { color:var(--accent3); }
-  .log-line.err { color:var(--danger); }
-  .log-line.info { color:var(--accent); }
-
-  ::-webkit-scrollbar { width:6px; }
-  ::-webkit-scrollbar-track { background:var(--surface); }
-  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
-  ::-webkit-scrollbar-thumb:hover { background:var(--muted); }
-
-  .spinner {
-    display:inline-block; width:14px; height:14px;
-    border:2px solid rgba(0,229,255,0.3); border-top-color:var(--accent);
-    border-radius:50%; animation:spin 0.7s linear infinite;
-  }
-  @keyframes spin { to { transform:rotate(360deg); } }
-  .hidden { display:none !important; }
-
-  .ctx-menu {
-    position:fixed; background:var(--surface2); border:1px solid var(--border);
-    border-radius:2px; z-index:999; min-width:160px; overflow:hidden;
-    box-shadow:0 8px 32px rgba(0,0,0,0.5);
-  }
-  .ctx-item {
-    padding:0.6rem 1rem; font-size:0.83rem; cursor:pointer;
-    display:flex; align-items:center; gap:0.5rem; color:var(--text);
-    transition:background 0.1s;
-  }
-  .ctx-item:hover { background:var(--border); }
-  .ctx-item.danger { color:var(--danger); }
-  .ctx-sep { height:1px; background:var(--border); margin:0.2rem 0; }
-
-  .view-toggle { display:flex; border:1px solid var(--border); border-radius:2px; overflow:hidden; }
-  .view-btn { padding:0.4rem 0.6rem; background:transparent; border:none; color:var(--muted); cursor:pointer; }
-  .view-btn.active { background:var(--surface2); color:var(--text); }
-
-  .file-table { width:100%; border-collapse:collapse; }
-  .file-table th {
-    text-align:left; padding:0.6rem 0.75rem; font-size:0.73rem;
-    color:var(--muted); border-bottom:1px solid var(--border);
-    text-transform:uppercase; letter-spacing:0.06em;
-  }
-  .file-table td { padding:0.6rem 0.75rem; font-size:0.86rem; border-bottom:1px solid rgba(42,42,58,0.5); }
-  .file-table tr:hover td { background:var(--surface2); }
-  .file-table tr.folder td { cursor:pointer; }
-
-  .tag { display:inline-block; padding:0.15rem 0.45rem; border-radius:2px; font-size:0.7rem; letter-spacing:0.05em; text-transform:uppercase; }
-  .tag-folder { background:rgba(124,58,237,0.15); color:#a78bfa; border:1px solid rgba(124,58,237,0.3); }
-  .tag-file { background:rgba(0,229,255,0.08); color:var(--accent); border:1px solid rgba(0,229,255,0.2); }
-
-  /* scrollbar support for selected files in upload modal */
-  #selected-files { max-height: 220px; overflow-y: auto; }
-
+  body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 30% 20%,rgba(124,111,255,0.07) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,rgba(52,217,240,0.05) 0%,transparent 50%);pointer-events:none;z-index:0}
+  #app{position:relative;z-index:1}
+  .auth-screen{display:flex;min-height:100vh;min-height:100dvh;align-items:flex-start;justify-content:center;padding:6vh 2rem 2rem}
+  .auth-box{width:100%;max-width:460px;background:var(--card);border:1px solid var(--border);padding:2.5rem;box-shadow:0 0 80px rgba(124,111,255,0.1),0 2px 0 rgba(255,255,255,0.04) inset;animation:fadeUp 0.4s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .logo{display:flex;align-items:center;gap:0.5rem;margin-bottom:2rem}
+  .logo-text{font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--accent2),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.02em}
+  .auth-title{font-size:1.6rem;font-weight:700;margin-bottom:0.4rem}
+  .auth-sub{color:var(--text3);font-size:0.82rem;margin-bottom:2rem}
+  .field{margin-bottom:1.2rem}
+  .field label{display:block;font-size:0.72rem;font-weight:700;color:var(--text2);margin-bottom:0.45rem;text-transform:uppercase;letter-spacing:0.09em}
+  .field input{width:100%;background:var(--bg2);border:1px solid var(--border);padding:0.8rem 1rem;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:0.88rem;outline:none;transition:border-color 0.2s,box-shadow 0.2s,background 0.2s}
+  .field input:focus{border-color:var(--accent);background:var(--card2);box-shadow:0 0 0 3px var(--glow)}
+  .field input::placeholder{color:var(--text3)}
+  .hint{font-size:0.7rem;color:var(--text3);margin-top:0.4rem}
+  .btn{width:100%;padding:0.85rem;border:none;font-family:'JetBrains Mono',monospace;font-size:0.95rem;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:0.5rem}
+  .btn-primary{background:linear-gradient(135deg,var(--accent),#8b5cf6);color:white;margin-top:0.5rem}
+  .btn-primary:hover{filter:brightness(1.15);transform:translateY(-1px)}
+  .btn-primary:active{transform:translateY(0)}
+  .btn-primary:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border);margin-top:0.8rem;font-size:0.85rem}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent2)}
+  .btn-danger{background:rgba(255,107,107,0.12);color:var(--danger);border:1px solid rgba(255,107,107,0.3);margin-top:0.5rem}
+  .btn-danger:hover{background:rgba(255,107,107,0.22)}
+  .divider{display:flex;align-items:center;gap:1rem;margin:1.2rem 0;color:var(--text3);font-size:0.75rem}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+  .msg{padding:0.7rem 0.9rem;border-left:3px solid;font-size:0.8rem;margin-bottom:1rem;line-height:1.5}
+  .msg-error{background:rgba(255,107,107,0.08);border-color:var(--danger);color:var(--danger)}
+  .msg-success{background:rgba(61,219,168,0.08);border-color:var(--success);color:var(--success)}
+  .msg-info{background:rgba(124,111,255,0.08);border-color:var(--accent);color:var(--accent2)}
+  .msg-warn{background:rgba(251,191,36,0.08);border-color:var(--warn);color:var(--warn)}
+  #main-app{display:none;flex-direction:column;min-height:100vh;min-height:100dvh}
+  #main-app.active{display:flex}
+  .topbar{height:54px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.5rem;gap:1rem;position:sticky;top:0;z-index:100}
+  .topbar .logo{margin-bottom:0}
+  .topbar-path{flex:1;display:flex;align-items:center;gap:0.3rem;font-size:0.78rem;color:var(--text3);overflow:hidden}
+  .path-seg{cursor:pointer;color:var(--text2);transition:color 0.15s;white-space:nowrap}
+  .path-seg:hover{color:var(--accent2)}
+  .path-sep{color:var(--text3)}
+  .topbar-actions{display:flex;align-items:center;gap:0.5rem}
+  .user-chip{display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0.75rem;background:var(--bg2);border:1px solid var(--border);font-size:0.75rem;color:var(--text2);cursor:pointer;transition:border-color 0.15s,background 0.15s}
+  .user-chip:hover{border-color:var(--accent);background:var(--card2)}
+  .content{flex:1;padding:1.5rem 2rem;max-width:1200px;width:100%;margin:0 auto}
+  .toolbar{display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap}
+  .toolbar-btn{display:flex;align-items:center;gap:0.4rem;padding:0.45rem 0.9rem;border:1px solid var(--border);background:var(--card2);color:var(--text2);font-family:'JetBrains Mono',monospace;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.15s}
+  .toolbar-btn:hover{border-color:var(--accent);color:var(--accent2);background:var(--glow)}
+  .toolbar-btn.primary{background:linear-gradient(135deg,var(--accent),#8b5cf6);border-color:transparent;color:white}
+  .toolbar-btn.primary:hover{filter:brightness(1.12)}
+  .storage-bar-wrap{margin-left:auto;display:flex;align-items:center;gap:0.75rem;font-size:0.7rem;color:var(--text3)}
+  .storage-bar{width:100px;height:3px;background:var(--bg3);overflow:hidden}
+  .storage-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent3));transition:width 0.3s}
+  .file-list-header{display:grid;grid-template-columns:1fr 120px 140px 40px;padding:0.4rem 0.75rem;border-bottom:1px solid var(--border);font-size:0.68rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;background:var(--bg2)}
+  .file-grid{display:flex;flex-direction:column;border:1px solid var(--border)}
+  .file-card{display:grid;grid-template-columns:1fr 120px 140px 40px;align-items:center;padding:0.65rem 0.75rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.12s;background:var(--card);animation:fadeUp 0.2s ease;position:relative;user-select:none}
+  .file-card:last-child{border-bottom:none}
+  .file-card:hover{background:var(--card2)}
+  .file-card.selected{background:rgba(124,111,255,0.1);border-bottom-color:rgba(124,111,255,0.2)}
+  .file-card-name-cell{display:flex;align-items:center;gap:0.65rem;min-width:0}
+  .file-type-icon{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .file-type-icon svg{width:16px;height:16px}
+  .file-name{font-size:0.85rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .file-size-cell{font-size:0.72rem;color:var(--text3)}
+  .file-date-cell{font-size:0.72rem;color:var(--text3)}
+  .file-card-menu{width:28px;height:28px;border:none;background:transparent;color:var(--text3);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity 0.15s,background 0.15s;font-size:14px;justify-self:end}
+  .file-card:hover .file-card-menu{opacity:1}
+  .file-card-menu:hover{background:var(--bg2);color:var(--text)}
+  .ctx-menu{position:fixed;background:var(--card2);border:1px solid var(--border);padding:0.3rem;min-width:160px;box-shadow:0 8px 32px rgba(0,0,0,0.5);z-index:999;animation:fadeUp 0.12s ease}
+  .ctx-item{display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.75rem;cursor:pointer;font-size:0.82rem;color:var(--text2);transition:background 0.1s,color 0.1s}
+  .ctx-item:hover{background:var(--bg2);color:var(--text)}
+  .ctx-item.danger:hover{background:rgba(255,107,107,0.1);color:var(--danger)}
+  .ctx-sep{height:1px;background:var(--border);margin:0.25rem 0}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(3px);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem;animation:fadeIn 0.18s ease}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .modal{background:var(--card);border:1px solid var(--border);padding:2rem;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.6);animation:fadeUp 0.22s ease}
+  .modal h3{font-size:1.05rem;font-weight:700;margin-bottom:1.2rem}
+  .modal.img-preview{background:#000;border-color:#000;padding:0;max-width:90vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden}
+  .img-preview-bar{display:flex;align-items:center;justify-content:space-between;padding:0.6rem 1rem;background:rgba(0,0,0,0.8);border-bottom:1px solid var(--border)}
+  .img-preview-name{font-size:0.78rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60vw}
+  .img-preview-actions{display:flex;gap:0.5rem;flex-shrink:0}
+  .img-preview-btn{padding:0.3rem 0.7rem;font-size:0.75rem;font-family:'JetBrains Mono',monospace;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);transition:all 0.15s}
+  .img-preview-btn:hover{border-color:var(--accent);color:var(--accent2)}
+  .img-preview-body{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;padding:1rem;min-height:200px}
+  .img-preview-body img{max-width:100%;max-height:80vh;object-fit:contain;display:block}
+  .upload-panel{position:fixed;bottom:1.5rem;right:1.5rem;width:340px;background:var(--card2);border:1px solid var(--border);padding:1.2rem;box-shadow:0 8px 32px rgba(0,0,0,0.5);z-index:300;display:none}
+  .upload-panel.active{display:block;animation:fadeUp 0.2s ease}
+  .upload-title{font-size:0.83rem;font-weight:700;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;color:var(--text)}
+  #upload-list{max-height:260px;overflow-y:auto;padding-right:4px}
+  .upload-item{margin-bottom:0.8rem}
+  .upload-item-name{font-size:0.73rem;color:var(--text2);margin-bottom:0.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .upload-progress-bar{height:3px;background:var(--bg2);overflow:hidden}
+  .upload-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent3));transition:width 0.3s}
+  .upload-status{font-size:0.67rem;color:var(--text3);margin-top:0.25rem}
+  .empty-state{text-align:center;padding:5rem 2rem;color:var(--text3)}
+  .empty-icon{margin-bottom:1rem;opacity:0.2}
+  .empty-title{font-size:1rem;font-weight:600;margin-bottom:0.5rem;color:var(--text2)}
+  .empty-sub{font-size:0.78rem}
+  .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%!important;animation:spin 0.6s linear infinite;display:inline-block}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-state{display:flex;flex-direction:column;align-items:center;gap:1rem;padding:5rem;color:var(--text3);font-size:0.82rem}
+  ::-webkit-scrollbar{width:5px;height:5px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border)}
+  ::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+  .hidden{display:none!important}
+  .drag-overlay{position:fixed;inset:0;background:rgba(124,111,255,0.1);border:3px dashed var(--accent);z-index:200;display:none;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;color:var(--accent2);backdrop-filter:blur(2px)}
+  .drag-overlay.active{display:flex}
+  .tag{display:inline-flex;align-items:center;padding:0.18rem 0.55rem;font-size:0.63rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em}
+  .tag-enc{background:rgba(52,217,240,0.1);color:var(--accent3);border:1px solid rgba(52,217,240,0.22)}
+  .stats-bar{display:flex;gap:2rem;margin-bottom:1rem;padding:0.9rem 1.2rem;background:var(--card);border:1px solid var(--border);flex-wrap:wrap}
+  .stat{display:flex;flex-direction:column;gap:0.2rem}
+  .stat-val{font-size:1rem;font-weight:700;background:linear-gradient(135deg,var(--accent2),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .stat-label{font-size:0.63rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.09em}
 </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- AUTH SCREEN -->
-  <div id="auth-screen" class="auth-wrap">
-    <div class="auth-card">
-      <div class="auth-header">
-        <div class="logo">IceDrive</div>
-        <p>GitHub-powered encrypted cloud storage</p>
+  <!-- SIGNUP -->
+  <div id="screen-signup" class="auth-screen hidden">
+    <div class="auth-box">
+      <div class="logo"><span class="logo-text">Git Archive</span></div>
+      <div class="auth-title">Authorise Access</div>
+      <div class="auth-sub">// create a new encrypted archive</div>
+      <div id="signup-msg"></div>
+      <div class="field">
+        <label>GitHub Username</label>
+        <input type="text" id="su-username" placeholder="octocat" autocomplete="off"/>
       </div>
-      <div class="auth-body">
-        <div class="tabs">
-          <button class="tab-btn active" onclick="switchTab('login')">LOGIN</button>
-          <button class="tab-btn" onclick="switchTab('signup')">SIGN UP</button>
-        </div>
+      <div class="field">
+        <label>Personal Access Token</label>
+        <input type="password" id="su-pat" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"/>
+        <div class="hint">Needs: repo, delete_repo permissions</div>
+      </div>
+      <div class="field">
+        <label>Vault Key <span style="color:var(--text3)">(encryption password)</span></label>
+        <input type="password" id="su-key" placeholder="strong passphrase"/>
+        <div class="hint">This key encrypts your PAT and all files. Don't lose it.</div>
+      </div>
+      <div class="field">
+        <label>Confirm Vault Key</label>
+        <input type="password" id="su-key2" placeholder="confirm passphrase"/>
+      </div>
+      <button class="btn btn-primary" id="su-btn" onclick="doSignup()"><span>Create Vault</span></button>
+      <div class="divider">already have an account?</div>
+      <button class="btn btn-ghost" onclick="showScreen('login')">Sign In →</button>
+    </div>
+  </div>
 
-        <div id="tab-login">
-          <div id="login-alert"></div>
-          <div class="form-group">
-            <label>GitHub Username</label>
-            <input type="text" id="login-user" placeholder="octocat">
-          </div>
-          <div class="form-group">
-            <label>Vault Password (Encryption Key)</label>
-            <input type="password" id="login-pass" placeholder="Your encryption password">
-            <div class="input-hint">The password you used when setting up your vault</div>
-          </div>
-          <button class="btn btn-primary" onclick="doLogin()">
-            <span id="login-spinner" class="spinner hidden"></span>
-            UNLOCK VAULT
-          </button>
+  <!-- LOGIN -->
+  <div id="screen-login" class="auth-screen">
+    <div style="width:100%;max-width:460px;display:flex;flex-direction:column;align-items:center;gap:2rem">
+      <div style="text-align:center">
+        <div style="font-size:2rem;font-weight:800;letter-spacing:-0.03em;background:linear-gradient(135deg,var(--accent2),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Git Archive</div>
+        <div style="font-size:0.75rem;color:var(--text3);margin-top:0.4rem;letter-spacing:0.12em;text-transform:uppercase">Encrypted Cloud Storage</div>
+      </div>
+      <div class="auth-box" style="width:100%;margin:0">
+        <div class="auth-title">Authorise Access</div>
+        <div id="login-msg"></div>
+        <div class="field">
+          <label>GitHub Username</label>
+          <input type="text" id="li-username" placeholder="octocat" autocomplete="off"/>
         </div>
-
-        <div id="tab-signup" class="hidden">
-          <div id="signup-alert"></div>
-          <div class="form-group">
-            <label>GitHub Username</label>
-            <input type="text" id="signup-user" placeholder="octocat">
-          </div>
-          <div class="form-group">
-            <label>GitHub Personal Access Token (PAT)</label>
-            <input type="password" id="signup-pat" placeholder="ghp_xxxxxxxxxxxx">
-            <div class="input-hint">Needs repo scope. Create at GitHub → Settings → Developer settings → PAT</div>
-          </div>
-          <div class="form-group">
-            <label>Vault Password (Encryption Key)</label>
-            <input type="password" id="signup-pass" placeholder="Strong password">
-            <div class="input-hint">⚠️ This encrypts everything. If lost, vault is unrecoverable.</div>
-          </div>
-          <div class="form-group">
-            <label>Confirm Password</label>
-            <input type="password" id="signup-pass2" placeholder="Repeat password">
-          </div>
-          <button class="btn btn-primary" onclick="doSignup()">
-            <span id="signup-spinner" class="spinner hidden"></span>
-            CREATE VAULT
-          </button>
+        <div class="field">
+          <label>Vault Key</label>
+          <input type="password" id="li-key" placeholder="your vault passphrase"/>
         </div>
+        <button class="btn btn-primary" id="li-btn" onclick="doLogin()"><span>Unlock Vault</span></button>
+        <div class="divider">new here?</div>
+        <button class="btn btn-ghost" onclick="showScreen('signup')">Create Archive →</button>
       </div>
     </div>
   </div>
@@ -328,1308 +284,756 @@
   <!-- MAIN APP -->
   <div id="main-app">
     <div class="topbar">
-      <div class="topbar-logo">IceDrive</div>
-      <div class="topbar-user">
-        <div id="sync-indicator" style="display:none;align-items:center;gap:0.4rem;font-size:0.75rem;color:var(--muted);padding:0.25rem 0.6rem;border:1px solid var(--border);border-radius:2px;">
-          <span class="spinner" style="width:10px;height:10px;border-width:1.5px;"></span>
-          <span id="sync-text">Syncing...</span>
+      <div class="logo"><span class="logo-text">Git Archive</span></div>
+      <div class="topbar-path" id="breadcrumb"></div>
+      <div class="topbar-actions">
+        <div class="user-chip" id="user-chip" onclick="doLogout()">
+          <span id="chip-username"></span>
+          <span style="color:var(--text3)">· logout</span>
         </div>
-        <div id="sync-ok" style="display:none;font-size:0.75rem;color:var(--accent3);padding:0.25rem 0.6rem;border:1px solid rgba(16,185,129,0.3);border-radius:2px;">✓ Synced</div>
-        <div class="user-badge">signed in as <span id="topbar-username">—</span></div>
-        <button class="btn btn-ghost btn-sm" onclick="doLogout()">LOGOUT</button>
       </div>
     </div>
-    <div class="app-body">
-      <div class="main-content">
-        <div class="content-header">
-          <div class="breadcrumb" id="breadcrumb">
-            <span class="breadcrumb-item current">My Vault</span>
+    <div class="content">
+      <div class="stats-bar" id="stats-bar">
+        <div class="stat"><div class="stat-val" id="stat-files">—</div><div class="stat-label">Files</div></div>
+        <div class="stat"><div class="stat-val" id="stat-folders">—</div><div class="stat-label">Folders</div></div>
+        <div class="stat"><div class="stat-val" id="stat-size">—</div><div class="stat-label">Stored</div></div>
+        <div class="stat" style="margin-left:auto;align-items:flex-end"><span class="tag tag-enc">AES-256 Encrypted</span></div>
+      </div>
+      <div class="toolbar">
+        <button class="toolbar-btn primary" onclick="triggerUpload()">↑ Upload</button>
+        <button class="toolbar-btn" onclick="showNewFolderModal()">+ New Folder</button>
+        <button class="toolbar-btn" id="btn-download" style="display:none" onclick="downloadSelected()">↓ Download</button>
+        <button class="toolbar-btn" id="btn-delete-sel" style="display:none" onclick="deleteSelected()">✕ Delete</button>
+        <div class="storage-bar-wrap">
+          <span id="storage-text">—</span>
+          <div class="storage-bar"><div class="storage-bar-fill" id="storage-fill" style="width:0%"></div></div>
+        </div>
+      </div>
+      <input type="file" id="file-input" multiple style="display:none" onchange="handleFileSelect(event)"/>
+      <div id="file-area">
+        <div class="loading-state" id="loading-state"><div class="spinner"></div><span>Loading vault...</span></div>
+        <div id="file-list-header" class="file-list-header" style="display:none">
+          <span>Name</span><span>Size</span><span>Modified</span><span></span>
+        </div>
+        <div class="file-grid" id="file-grid" style="display:none"></div>
+        <div class="empty-state hidden" id="empty-state">
+          <div class="empty-icon">
+            <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
           </div>
-          <div class="header-actions">
-            <div class="view-toggle">
-              <button class="view-btn active" id="btn-grid" onclick="setView('grid')">⊞</button>
-              <button class="view-btn" id="btn-list" onclick="setView('list')">☰</button>
-            </div>
-            <button class="btn btn-ghost btn-sm" onclick="triggerUpload()">⬆ UPLOAD</button>
-            <button class="btn btn-ghost btn-sm" onclick="showNewFolder()">+ FOLDER</button>
-          </div>
-        </div>
-        <div class="file-list" id="file-list" ondragover="onDragOver(event)" ondrop="onDrop(event)" ondragleave="onDragLeave(event)">
+          <div class="empty-title">This folder is empty</div>
+          <div class="empty-sub">Upload files or create a folder to get started</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- DROP OVERLAY -->
-  <div class="drop-overlay" id="drop-overlay">
-    <div class="drop-msg">
-      <div style="font-size:4rem;margin-bottom:1rem">⬆</div>
-      Drop files to upload to IceDrive
+  <div class="drag-overlay" id="drag-overlay">Drop files to upload</div>
+
+  <div class="upload-panel" id="upload-panel">
+    <div class="upload-title">
+      <span>Uploading</span>
+      <span style="cursor:pointer;color:var(--text3);font-size:1.1rem" onclick="closeUploadPanel()">×</span>
+    </div>
+    <div id="upload-list"></div>
+  </div>
+
+  <div class="ctx-menu hidden" id="ctx-menu"></div>
+
+  <div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal(event)">
+    <div class="modal" id="modal-box" onclick="event.stopPropagation()">
+      <div id="modal-content"></div>
     </div>
   </div>
-
-  <!-- UPLOAD MODAL -->
-  <div class="modal-backdrop" id="upload-modal">
-    <div class="modal" style="max-width:520px">
-      <div class="modal-head">
-        <div class="modal-title">Upload Files</div>
-        <button class="icon-btn" id="upload-close-btn" onclick="closeModal('upload-modal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <div id="upload-select-area">
-          <div id="upload-dropzone" onclick="document.getElementById('file-input').click()"
-            style="border:2px dashed var(--border);border-radius:2px;padding:2rem;text-align:center;cursor:pointer;transition:all 0.2s;"
-            onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor='var(--border)'">
-            <div style="font-size:2rem;margin-bottom:0.5rem">⬆</div>
-            <div style="font-size:0.9rem;color:var(--text)">Click to browse or drop files here</div>
-            <div style="font-size:0.77rem;color:var(--muted);margin-top:0.25rem">Files are encrypted before upload</div>
-          </div>
-          <input type="file" id="file-input" multiple style="display:none" onchange="onFilesSelected(this.files)">
-          <div id="selected-files" style="margin-top:0.75rem;"></div>
-        </div>
-        <div id="upload-progress-area" class="hidden">
-          <div id="upload-status-banner" style="display:flex;align-items:center;gap:0.6rem;padding:0.6rem 0.75rem;border-radius:2px;margin-bottom:0.75rem;font-size:0.85rem;background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.2);color:var(--accent);">
-            <span class="spinner"></span>
-            <span id="upload-status-text">Starting upload...</span>
-          </div>
-          <div class="progress-wrap" style="margin-bottom:0.75rem">
-            <div class="progress-label">
-              <span id="progress-label-text">Preparing...</span>
-              <span id="progress-pct">0%</span>
-            </div>
-            <div class="progress-track"><div class="progress-fill" id="upload-progress-bar" style="width:0%"></div></div>
-          </div>
-          <div class="progress-log" id="upload-log" style="max-height:180px"></div>
-        </div>
-      </div>
-      <div class="modal-foot" id="upload-modal-foot">
-        <button class="btn btn-ghost btn-sm" id="upload-cancel-btn" onclick="closeModal('upload-modal')">Cancel</button>
-        <button class="btn btn-primary btn-sm" id="start-upload-btn" onclick="startUpload()" disabled>START UPLOAD</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- NEW FOLDER MODAL -->
-  <div class="modal-backdrop" id="folder-modal">
-    <div class="modal">
-      <div class="modal-head">
-        <div class="modal-title">New Folder</div>
-        <button class="icon-btn" id="folder-modal-close" onclick="closeModal('folder-modal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label>Folder Name</label>
-          <input type="text" id="folder-name-input" placeholder="My Documents" onkeydown="if(event.key==='Enter') createFolder()">
-        </div>
-        <div id="folder-status" style="display:none; align-items:center; gap:0.6rem; font-size:0.85rem; padding:0.6rem 0.75rem; border-radius:2px; margin-top:0.25rem;"></div>
-      </div>
-      <div class="modal-foot">
-        <button class="btn btn-ghost btn-sm" id="folder-cancel-btn" onclick="closeModal('folder-modal')">Cancel</button>
-        <button class="btn btn-primary btn-sm" id="folder-create-btn" onclick="createFolder()">CREATE</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- DELETE CONFIRM MODAL -->
-  <div class="modal-backdrop" id="delete-modal">
-    <div class="modal">
-      <div class="modal-head">
-        <div class="modal-title" style="color:var(--danger)">Delete File</div>
-        <button class="icon-btn" onclick="closeModal('delete-modal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <p style="font-size:0.9rem;">Are you sure you want to delete <strong id="delete-filename"></strong>? This will remove all chunks from GitHub.</p>
-        <div id="delete-progress" class="hidden" style="margin-top:1rem;">
-          <div class="progress-log" id="delete-log"></div>
-        </div>
-      </div>
-      <div class="modal-foot" id="delete-modal-foot">
-        <button class="btn btn-ghost btn-sm" onclick="closeModal('delete-modal')">Cancel</button>
-        <button class="btn btn-danger btn-sm" id="confirm-delete-btn" onclick="confirmDelete()">DELETE</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- CONTEXT MENU -->
-  <div class="ctx-menu hidden" id="ctx-menu">
-    <div class="ctx-item" id="ctx-download" onclick="ctxDownload()">⬇ Download</div>
-    <div class="ctx-sep"></div>
-    <div class="ctx-item danger" id="ctx-delete" onclick="ctxDelete()">🗑 Delete</div>
-  </div>
-
-  <input type="file" id="main-file-input" multiple style="display:none" onchange="onFilesSelected(this.files)">
 </div>
 
 <script>
-const CHUNK_SIZE = 30 * 1024 * 1024;
-const CHUNKS_PER_REPO = 14;
-const CONFIG_REPO = 'cloudvault-config';
-const STORAGE_REPO_PREFIX = 'cloudvault-storage-';
+// ── CRYPTO ──────────────────────────────────────────────────────
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 
-async function deriveKey(password, salt) {
-  const enc = new TextEncoder();
-  const keyMat = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey(
-    { name:'PBKDF2', salt, iterations:200000, hash:'SHA-256' },
-    keyMat, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']
-  );
+async function deriveKey(password,salt){
+  const enc=new TextEncoder();
+  const km=await crypto.subtle.importKey('raw',enc.encode(password),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:200000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
 }
 
-async function encryptBytes(data, password) {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const iv   = crypto.getRandomValues(new Uint8Array(12));
-  const key  = await deriveKey(password, salt);
-  const ct   = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, data);
-  const out  = new Uint8Array(4 + 16 + 12 + ct.byteLength);
-  out[0]=0xC1; out[1]=0xC2; out[2]=0xC3; out[3]=0x01;
-  out.set(salt, 4);
-  out.set(iv, 20);
-  out.set(new Uint8Array(ct), 32);
-  return out;
+async function encryptData(data,password){
+  const raw=typeof data==='string'?new TextEncoder().encode(data):data;
+  const salt=crypto.getRandomValues(new Uint8Array(16));
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await deriveKey(password,salt);
+  const enc=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,raw);
+  const result=new Uint8Array(28+enc.byteLength);
+  result.set(salt,0);result.set(iv,16);result.set(new Uint8Array(enc),28);
+  return result;
 }
 
-async function decryptBytes(data, password) {
-  if (data[0]!==0xC1||data[1]!==0xC2||data[2]!==0xC3||data[3]!==0x01) throw new Error('Bad magic / not encrypted');
-  const salt = data.slice(4, 20);
-  const iv   = data.slice(20, 32);
-  const ct   = data.slice(32);
-  const key  = await deriveKey(password, salt);
-  const pt   = await crypto.subtle.decrypt({ name:'AES-GCM', iv }, key, ct);
-  return new Uint8Array(pt);
+async function decryptData(encBytes,password){
+  const salt=encBytes.slice(0,16),iv=encBytes.slice(16,28),ct=encBytes.slice(28);
+  const key=await deriveKey(password,salt);
+  const dec=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct);
+  return new Uint8Array(dec);
 }
 
-const B64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-const B64_LOOKUP = (() => {
-  const t = new Uint8Array(256);
-  for (let i = 0; i < B64_CHARS.length; i++) t[B64_CHARS.charCodeAt(i)] = i;
-  return t;
-})();
+function bytesToBase64(bytes){
+  let b='';const cs=8192;
+  for(let i=0;i<bytes.length;i+=cs)b+=String.fromCharCode(...bytes.subarray(i,i+cs));
+  return btoa(b);
+}
+function base64ToBytes(b64){
+  const b=atob(b64),bytes=new Uint8Array(b.length);
+  for(let i=0;i<b.length;i++)bytes[i]=b.charCodeAt(i);
+  return bytes;
+}
+async function encryptToBase64(data,pw){return bytesToBase64(await encryptData(data,pw))}
+async function decryptFromBase64(b64,pw){return decryptData(base64ToBytes(b64),pw)}
+async function encryptText(t,pw){return encryptToBase64(t,pw)}
+async function decryptText(b64,pw){return new TextDecoder().decode(await decryptFromBase64(b64,pw))}
 
-function b64Encode(bytes) {
-  const len = bytes.length;
-  const chunks = [];
-  for (let i = 0; i < len; i += 3) {
-    const b0 = bytes[i];
-    const b1 = (i+1) < len ? bytes[i+1] : 0;
-    const b2 = (i+2) < len ? bytes[i+2] : 0;
-    chunks.push(
-      B64_CHARS[b0 >> 2],
-      B64_CHARS[((b0 & 3) << 4) | (b1 >> 4)],
-      (i+1) < len ? B64_CHARS[((b1 & 15) << 2) | (b2 >> 6)] : '=',
-      (i+2) < len ? B64_CHARS[b2 & 63] : '='
-    );
-  }
-  return chunks.join('');
+// ── GITHUB API ───────────────────────────────────────────────────
+const GH='https://api.github.com';
+
+async function ghReq(method,path,body,pat){
+  const res=await fetch(GH+path,{method,headers:{'Authorization':`token ${pat}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.message||`GitHub API error ${res.status}`)}
+  return res.status===204?null:res.json();
+}
+async function createRepo(name,pat){
+  return ghReq('POST','/user/repos',{name,private:false,auto_init:true},pat);
+}
+async function deleteRepo(owner,name,pat){return ghReq('DELETE',`/repos/${owner}/${name}`,null,pat)}
+async function listRepos(owner,pat){
+  let all=[],page=1;
+  while(true){const chunk=await ghReq('GET',`/user/repos?per_page=100&page=${page}`,null,pat);all=all.concat(chunk);if(chunk.length<100)break;page++}
+  return all;
+}
+async function ghUploadFile(owner,repo,path,bytes,pat){
+  return ghReq('PUT',`/repos/${owner}/${repo}/contents/${path}`,{message:'vaultdrive',content:bytesToBase64(bytes)},pat);
+}
+async function ghDeleteFile(owner,repo,path,pat){
+  const info=await ghReq('GET',`/repos/${owner}/${repo}/contents/${path}`,null,pat);
+  return ghReq('DELETE',`/repos/${owner}/${repo}/contents/${path}`,{message:`vaultdrive: remove ${path}`,sha:info.sha},pat);
+}
+async function ghGetFileRaw(owner,repo,path,pat){
+  const res=await fetch(`${GH}/repos/${owner}/${repo}/contents/${path}`,{headers:{'Authorization':`token ${pat}`,'Accept':'application/vnd.github.v3.raw'}});
+  if(!res.ok)throw new Error(`Failed to fetch ${path} (${res.status})`);
+  return new Uint8Array(await res.arrayBuffer());
+}
+async function ghListFiles(owner,repo,path,pat){
+  try{
+    const res=await fetch(`${GH}/repos/${owner}/${repo}/contents/${path||''}`,{headers:{'Authorization':`token ${pat}`,'Accept':'application/vnd.github.v3+json'}});
+    if(!res.ok)return[];
+    const d=await res.json();return Array.isArray(d)?d:[];
+  }catch{return[]}
 }
 
-function b64Decode(str) {
-  const s = str.replace(/[^A-Za-z0-9+/=]/g, '');
-  const padded = s + '===='.slice(s.length % 4 || 4);
-  const len = padded.length;
-  let padCount = 0;
-  for (let i = len - 1; i >= 0 && padded[i] === '='; i--) padCount++;
-  const outLen = (len / 4) * 3 - padCount;
-  const out = new Uint8Array(outLen);
-  let j = 0;
-  for (let i = 0; i < len; i += 4) {
-    const c0 = B64_LOOKUP[padded.charCodeAt(i)]   || 0;
-    const c1 = B64_LOOKUP[padded.charCodeAt(i+1)] || 0;
-    const c2 = B64_LOOKUP[padded.charCodeAt(i+2)] || 0;
-    const c3 = B64_LOOKUP[padded.charCodeAt(i+3)] || 0;
-    const triple = (c0 << 18) | (c1 << 12) | (c2 << 6) | c3;
-    if (j < outLen) out[j++] = (triple >> 16) & 0xff;
-    if (j < outLen) out[j++] = (triple >> 8)  & 0xff;
-    if (j < outLen) out[j++] =  triple        & 0xff;
-  }
-  return out;
+// ── SESSION ──────────────────────────────────────────────────────
+let session=null;
+
+// ── CONFIG REPO ──────────────────────────────────────────────────
+const CONFIG_REPO='vaultdrive-config';
+const CONFIG_FILE_PREFIX='config_v';
+const ROOT_META_PREFIX='root_v';
+const _versionCounters={};
+
+async function getNextVersion(prefix,pat,username){
+  if(_versionCounters[prefix]!==undefined){_versionCounters[prefix]++;return _versionCounters[prefix]}
+  const files=await ghListFiles(username,CONFIG_REPO,'',pat);
+  let best=0;
+  for(const f of files){if(f.name.startsWith(prefix)&&f.type==='file'){const n=parseInt(f.name.slice(prefix.length).replace('.enc',''))||0;if(n>best)best=n}}
+  _versionCounters[prefix]=best+1;return _versionCounters[prefix];
 }
 
-const _ghQueue = {
-  lastCall: 0,
-  minGap:   100,
-  running:  false,
-  queue:    [],
-  schedule(fn) {
-    return new Promise((resolve, reject) => {
-      this.queue.push({ fn, resolve, reject });
-      if (!this.running) this._drain();
-    });
-  },
-  async _drain() {
-    this.running = true;
-    while (this.queue.length > 0) {
-      const now  = Date.now();
-      const wait = Math.max(0, this.lastCall + this.minGap - now);
-      if (wait > 0) await new Promise(r => setTimeout(r, wait));
-      const { fn, resolve, reject } = this.queue.shift();
-      this.lastCall = Date.now();
-      try { resolve(await fn()); } catch(e) { reject(e); }
+async function saveVersionedFile(prefix,content,pat,username){
+  const existing=await ghListFiles(username,CONFIG_REPO,'',pat);
+  const oldVersions=existing.filter(f=>f.name.startsWith(prefix)&&f.type==='file');
+  const newNum=await getNextVersion(prefix,pat,username);
+  const newFilename=`${prefix}${newNum}.enc`;
+  const bytes=typeof content==='string'?new TextEncoder().encode(content):content;
+  await ghUploadFile(username,CONFIG_REPO,newFilename,bytes,pat);
+  for(const f of oldVersions){try{await ghDeleteFile(username,CONFIG_REPO,f.name,pat)}catch(e){console.warn('del old:',e.message)}}
+  return newFilename;
+}
+
+// ── SIGNUP ───────────────────────────────────────────────────────
+async function doSignup(){
+  const username=document.getElementById('su-username').value.trim();
+  const pat=document.getElementById('su-pat').value.trim();
+  const key=document.getElementById('su-key').value;
+  const key2=document.getElementById('su-key2').value;
+  const msgEl=document.getElementById('signup-msg');
+  if(!username||!pat||!key)return showMsg(msgEl,'error','All fields are required.');
+  if(key!==key2)return showMsg(msgEl,'error','Vault keys do not match.');
+  if(key.length<8)return showMsg(msgEl,'error','Vault key must be at least 8 characters.');
+  const btn=document.getElementById('su-btn');
+  btn.disabled=true;btn.innerHTML='<div class="spinner"></div> Setting up...';
+  try{
+    showMsg(msgEl,'info','Verifying credentials...');
+    const user=await ghReq('GET','/user',null,pat);
+    if(user.login.toLowerCase()!==username.toLowerCase())throw new Error('Username does not match the PAT owner.');
+    const repos=await listRepos(username,pat);
+    const vaultRepos=repos.filter(r=>r.name.startsWith('vaultdrive-'));
+    if(vaultRepos.length>0){
+      const ok=await confirmModal('Existing Repos Found',`Found ${vaultRepos.length} existing vaultdrive repo(s). Delete all and start fresh?`,'Delete All & Continue','Cancel');
+      if(!ok){btn.disabled=false;btn.innerHTML='<span>Create Vault</span>';return}
+      showMsg(msgEl,'info','Deleting existing repos...');
+      for(const r of vaultRepos)await deleteRepo(username,r.name,pat);
     }
-    this.running = false;
-  }
-};
-
-async function ghFetch(reqFn) {
-  return _ghQueue.schedule(async () => {
-    for (let attempt = 1; attempt <= 5; attempt++) {
-      const r = await reqFn();
-      if (r.status === 429 || (r.status === 403)) {
-        const body = await r.json().catch(() => ({}));
-        const isRateLimit = r.status === 429 ||
-          (body.message && body.message.toLowerCase().includes('secondary rate'));
-        if (isRateLimit && attempt < 5) {
-          const retryAfter = parseInt(r.headers.get('Retry-After') || '0', 10);
-          const backoff = retryAfter ? retryAfter * 1000 : 2000 * Math.pow(2, attempt - 1);
-          await new Promise(res => setTimeout(res, backoff));
-          continue;
-        }
-        const err = new Error(body.message || r.statusText);
-        err.status = r.status;
-        throw err;
-      }
-      return r;
-    }
-  });
+    showMsg(msgEl,'info','Creating config repo...');
+    await createRepo(CONFIG_REPO,pat);
+    Object.keys(_versionCounters).forEach(k=>delete _versionCounters[k]);
+    const encPat=await encryptText(pat,key);
+    const config={version:1,username,encPat,dataRepos:[],totalFiles:0,totalSize:0,createdAt:Date.now()};
+    await saveVersionedFile(CONFIG_FILE_PREFIX,await encryptText(JSON.stringify(config),key),pat,username);
+    const rootMeta={id:'root',name:'root',folders:[],files:[],createdAt:Date.now(),updatedAt:Date.now()};
+    await saveVersionedFile(ROOT_META_PREFIX,await encryptText(JSON.stringify(rootMeta),key),pat,username);
+    showMsg(msgEl,'success','Vault created! Redirecting...');
+    await sleep(1500);
+    document.getElementById('li-username').value=username;
+    showScreen('login');
+  }catch(e){showMsg(msgEl,'error',e.message)}
+  finally{btn.disabled=false;btn.innerHTML='<span>Create Vault</span>'}
 }
 
-async function ghGet(pat, username, repo, path) {
-  const r = await ghFetch(() => fetch(
-    `https://api.github.com/repos/${username}/${repo}/contents/${path}`,
-    { headers:{ Authorization:`token ${pat}`, Accept:'application/vnd.github+json' } }
-  ));
-  if (!r.ok) {
-    const e = await r.json();
-    const err = new Error(e.message || r.statusText);
-    err.status = r.status;
-    throw err;
-  }
-  return r.json();
-}
-
-async function ghPut(pat, username, repo, path, content_b64, sha, message='CloudVault update') {
-  const body = { message, content: content_b64 };
-  if (sha) body.sha = sha;
-  const r = await ghFetch(() => fetch(
-    `https://api.github.com/repos/${username}/${repo}/contents/${path}`,
-    {
-      method: 'PUT',
-      headers:{ Authorization:`token ${pat}`, Accept:'application/vnd.github+json', 'Content-Type':'application/json' },
-      body: JSON.stringify(body)
-    }
-  ));
-  if (!r.ok) { const e = await r.json(); throw new Error(e.message || r.statusText); }
-  return r.json();
-}
-
-async function ghDelete(pat, username, repo, path, sha, message='CloudVault delete') {
-  const r = await ghFetch(() => fetch(
-    `https://api.github.com/repos/${username}/${repo}/contents/${path}`,
-    {
-      method: 'DELETE',
-      headers:{ Authorization:`token ${pat}`, Accept:'application/vnd.github+json', 'Content-Type':'application/json' },
-      body: JSON.stringify({ message, sha })
-    }
-  ));
-  if (!r.ok) { const e = await r.json(); throw new Error(e.message || r.statusText); }
-  return r.json();
-}
-
-async function ghCreateRepo(pat, username, repoName, description='CloudVault storage') {
-  const r = await ghFetch(() => fetch(
-    'https://api.github.com/user/repos',
-    {
-      method: 'POST',
-      headers:{ Authorization:`token ${pat}`, Accept:'application/vnd.github+json', 'Content-Type':'application/json' },
-      body: JSON.stringify({ name:repoName, description, private:false, auto_init:true })
-    }
-  ));
-  if (!r.ok) {
-    const e = await r.json();
-    if (r.status === 422) return 'exists';
-    throw new Error(e.message || r.statusText);
-  }
-  return 'created';
-}
-
-async function ghRepoExists(pat, username, repo) {
-  const r = await ghFetch(() => fetch(
-    `https://api.github.com/repos/${username}/${repo}`,
-    { headers:{ Authorization:`token ${pat}`, Accept:'application/vnd.github+json' } }
-  ));
-  return r.ok;
-}
-
-async function ghGetRaw(url) {
-  return _ghQueue.schedule(async () => {
-    const r = await fetch(url);
-    if (!r.ok) throw new Error('Failed to fetch: ' + url);
-    return new Uint8Array(await r.arrayBuffer());
-  });
-}
-
-async function ghListDir(pat, username, repo, path='') {
-  const r = await ghFetch(() => fetch(
-    `https://api.github.com/repos/${username}/${repo}/contents/${path}`,
-    { headers:{ Authorization:`token ${pat}`, Accept:'application/vnd.github+json' } }
-  ));
-  if (!r.ok) return [];
-  const data = await r.json();
-  return Array.isArray(data) ? data : [];
-}
-
-let SESSION = {
-  pat: null,
-  username: null,
-  password: null,
-  vaultSession: {
-    version: 1,
-    files: [],
-    folders: [],
-    repoStats: {}
-  }
-};
-
-function getNode(pathArr) {
-  let node = SESSION.vaultSession;
-  return { files: node.files, folders: node.folders };
-}
-
-let _syncTimer = null;
-function bgSync() {
-  clearTimeout(_syncTimer);
-  _syncTimer = setTimeout(async () => {
-    const indicator = document.getElementById('sync-indicator');
-    const okBadge   = document.getElementById('sync-ok');
-    const syncText  = document.getElementById('sync-text');
-    if (indicator) { indicator.style.display = 'flex'; if(syncText) syncText.textContent = 'Syncing...'; }
-    if (okBadge)   { okBadge.style.display = 'none'; }
-    try {
-      await saveSession();
-      if (indicator) indicator.style.display = 'none';
-      if (okBadge)   { okBadge.style.display = 'block'; setTimeout(() => { okBadge.style.display = 'none'; }, 2000); }
-    } catch(e) {
-      if (indicator) {
-        indicator.style.color = '#fca5a5';
-        indicator.style.borderColor = 'var(--danger)';
-        if (syncText) syncText.textContent = 'Sync failed: ' + e.message;
-        setTimeout(() => {
-          indicator.style.display = 'none';
-          indicator.style.color = 'var(--muted)';
-          indicator.style.borderColor = 'var(--border)';
-        }, 5000);
-      }
-      console.warn('bgSync failed:', e.message);
-    }
-  }, 600);
-}
-
-function getFolderContents(pathArr) {
-  const pathStr = pathArr.join('/');
-  const files = SESSION.vaultSession.files.filter(f => {
-    const parts = f.path.split('/').filter(Boolean);
-    const parentParts = parts.slice(0,-1);
-    return parentParts.join('/') === pathStr;
-  });
-  const folders = SESSION.vaultSession.folders.filter(f => {
-    const parts = f.path.split('/').filter(Boolean);
-    const parentParts = parts.slice(0,-1);
-    return parentParts.join('/') === pathStr;
-  });
-  return { files, folders };
-}
-
-const SESSION_PREFIX = 'cv_session_';
-let   _currentSessionN = -1;
-
-async function findLatestSessionN(pat, username) {
-  const authHdr = { Authorization: `token ${pat}`, Accept: 'application/vnd.github+json' };
-  const r = await fetch(
-    `https://api.github.com/repos/${username}/${CONFIG_REPO}/contents/`,
-    { headers: authHdr }
-  );
-  if (!r.ok) return -1;
-  const files = await r.json();
-  let max = -1;
-  for (const f of files) {
-    if (f.name.startsWith(SESSION_PREFIX) && f.name.endsWith('.dat')) {
-      const n = parseInt(f.name.slice(SESSION_PREFIX.length, -4), 10);
-      if (!isNaN(n) && n > max) max = n;
-    }
-  }
-  return max;
-}
-
-async function saveSession() {
-  const json      = JSON.stringify(SESSION.vaultSession);
-  const enc       = new TextEncoder().encode(json);
-  const encrypted = await encryptBytes(enc, SESSION.password);
-  const b64       = b64Encode(encrypted);
-
-  await _ghQueue.schedule(async () => {
-    const authHdr = { Authorization: `token ${SESSION.pat}`, Accept: 'application/vnd.github+json' };
-    const base    = `https://api.github.com/repos/${SESSION.username}/${CONFIG_REPO}/contents/`;
-
-    if (_currentSessionN < 0) {
-      _currentSessionN = await findLatestSessionN(SESSION.pat, SESSION.username);
-    }
-
-    const oldN   = _currentSessionN;
-    const newN   = oldN + 1;
-    const newFile = SESSION_PREFIX + newN + '.dat';
-
-    const pr = await fetch(base + newFile, {
-      method:  'PUT',
-      headers: { ...authHdr, 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ message: 'cv session v' + newN, content: b64 })
-    });
-    if (!pr.ok) {
-      const e = await pr.json().catch(() => ({}));
-      throw new Error('Session upload failed: ' + (e.message || pr.status));
-    }
-
-    _currentSessionN = newN;
-
-    if (oldN >= 0) {
-      const oldFile = SESSION_PREFIX + oldN + '.dat';
-      fetch(base + oldFile, { headers: authHdr })
-        .then(gr => {
-          if (!gr.ok) return;
-          return gr.json().then(d => fetch(base + oldFile, {
-            method:  'DELETE',
-            headers: { ...authHdr, 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ message: 'cv session cleanup', sha: d.sha })
-          }));
-        })
-        .catch(() => {});
-    }
-  });
-}
-
-async function loadSession() {
-  const n = await findLatestSessionN(SESSION.pat, SESSION.username);
-  if (n < 0) throw new Error('No session file found');
-  _currentSessionN = n;
-  const filename = SESSION_PREFIX + n + '.dat';
-  const data = await ghGet(SESSION.pat, SESSION.username, CONFIG_REPO, filename);
-  const raw  = b64Decode(data.content);
-  const dec  = await decryptBytes(raw, SESSION.password);
-  SESSION.vaultSession = JSON.parse(new TextDecoder().decode(dec));
-}
-
-let currentPath = [];
-let viewMode = 'grid';
-let pendingUploadFiles = [];
-let ctxTargetFile = null;
-let deleteTarget = null;
-
-function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (tab==='login'?i===0:i===1)));
-  document.getElementById('tab-login').classList.toggle('hidden', tab !== 'login');
-  document.getElementById('tab-signup').classList.toggle('hidden', tab !== 'signup');
-}
-
-function setAlert(id, msg, type='error') {
-  const el = document.getElementById(id);
-  if (!msg) { el.innerHTML=''; return; }
-  el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
-}
-
-async function doSignup() {
-  const username = document.getElementById('signup-user').value.trim();
-  const pat = document.getElementById('signup-pat').value.trim();
-  const pass = document.getElementById('signup-pass').value;
-  const pass2 = document.getElementById('signup-pass2').value;
-  setAlert('signup-alert','');
-  if (!username||!pat||!pass||!pass2) return setAlert('signup-alert','All fields required.');
-  if (pass !== pass2) return setAlert('signup-alert','Passwords do not match.');
-  if (pass.length < 8) return setAlert('signup-alert','Password must be at least 8 characters.');
-
-  const spin = document.getElementById('signup-spinner');
-  spin.classList.remove('hidden');
-  try {
-    const userResp = await fetch('https://api.github.com/user', {
-      headers:{ Authorization:`token ${pat}` }
-    });
-    if (!userResp.ok) throw new Error('Invalid PAT or GitHub API error');
-    const userData = await userResp.json();
-    if (userData.login.toLowerCase() !== username.toLowerCase()) throw new Error('PAT does not match username');
-
-    setAlert('signup-alert','Creating config repository...','info');
-    const res = await ghCreateRepo(pat, username, CONFIG_REPO, 'CloudVault configuration');
-    if (res === 'exists') {
-      let configExists = false;
-      try {
-        await ghGet(pat, username, CONFIG_REPO, 'config.dat');
-        configExists = true;
-      } catch(e2) {}
-      if (configExists) {
-        throw new Error('A vault config already exists. If it is broken, delete the cloudvault-config repo on GitHub and sign up again. Otherwise use Login.');
-      }
-    }
-    setAlert('signup-alert','Waiting for repository to initialize...','info');
-    await new Promise(r=>setTimeout(r, res === 'created' ? 3500 : 500));
-
-    const configObj = { username, patEncrypted: null, createdAt: new Date().toISOString() };
-    const patEnc = await encryptBytes(new TextEncoder().encode(pat), pass);
-    configObj.patEncrypted = b64Encode(patEnc);
-    const configJson = JSON.stringify(configObj);
-    const configEnc = await encryptBytes(new TextEncoder().encode(configJson), pass);
-    const configB64 = b64Encode(configEnc);
-
-    setAlert('signup-alert','Saving encrypted config...','info');
-    let readmeSha;
-    try {
-      const rm = await ghGet(pat, username, CONFIG_REPO, 'README.md');
-      readmeSha = rm.sha;
-    } catch(e){}
-
-    await ghPut(pat, username, CONFIG_REPO, 'config.dat', configB64, undefined, 'Initialize CloudVault config');
-
-    SESSION.pat = pat; SESSION.username = username; SESSION.password = pass;
-    SESSION.vaultSession = { version:1, files:[], folders:[], repoStats:{} };
-    setAlert('signup-alert','Saving vault session...','info');
-    await saveSession();
-
-    setAlert('signup-alert','✓ Vault created! You can now log in.','success');
-    setTimeout(()=> switchTab('login'), 2000);
-  } catch(e) {
-    setAlert('signup-alert', e.message || 'Signup failed');
-  }
-  spin.classList.add('hidden');
-}
-
-async function doLogin() {
-  const username = document.getElementById('login-user').value.trim();
-  const pass = document.getElementById('login-pass').value;
-  setAlert('login-alert','');
-  if (!username||!pass) return setAlert('login-alert','All fields required.');
-  const spin = document.getElementById('login-spinner');
-  spin.classList.remove('hidden');
-  try {
-    setAlert('login-alert', 'Fetching vault config...', 'info');
-    const configApiUrl = `https://api.github.com/repos/${username}/${CONFIG_REPO}/contents/config.dat`;
-    const configResp = await fetch(configApiUrl, {
-      headers: { Accept: 'application/vnd.github+json' }
-    });
-    if (!configResp.ok) {
-      throw new Error('No vault found for this username. Please sign up first. (HTTP ' + configResp.status + ')');
-    }
-    const configApiData = await configResp.json();
-    const rawB64 = configApiData.content;
-    if (!rawB64) throw new Error('config.dat is empty — vault may be corrupted.');
-
-    let rawBytes;
-    try { rawBytes = b64Decode(rawB64); }
-    catch(e) { throw new Error('config.dat base64 decode failed: ' + e.message); }
-
-    let configObj;
-    try {
-      const dec = await decryptBytes(rawBytes, pass);
-      const jsonStr = new TextDecoder().decode(dec);
-      configObj = JSON.parse(jsonStr);
-    } catch(e) {
-      const magic = rawBytes.length >= 4
-        ? Array.from(rawBytes.slice(0,4)).map(b=>'0x'+b.toString(16).padStart(2,'0')).join(' ')
-        : '(too short: ' + rawBytes.length + ' bytes)';
-      const isWrongPassword = rawBytes[0]===0xC1 && rawBytes[1]===0xC2 && rawBytes[2]===0xC3 && rawBytes[3]===0x01;
-      if (isWrongPassword) {
-        throw new Error('Wrong password — decryption failed. Please check your password and try again.');
-      } else {
-        throw new Error(
-          'Vault config cannot be decrypted. This usually means the vault was created with ' +
-          'a broken version of the app and needs to be re-initialized. ' +
-          'First 4 bytes: ' + magic
-        );
-      }
-    }
-
-    if (!configObj.patEncrypted) throw new Error('config.dat is missing the patEncrypted field — vault may be corrupted.');
-    let patBytes;
-    try { patBytes = b64Decode(configObj.patEncrypted); }
-    catch(e) { throw new Error('patEncrypted field could not be base64-decoded: ' + e.message); }
+// ── LOGIN ────────────────────────────────────────────────────────
+async function doLogin(){
+  const username=document.getElementById('li-username').value.trim();
+  const key=document.getElementById('li-key').value;
+  const msgEl=document.getElementById('login-msg');
+  if(!username||!key)return showMsg(msgEl,'error','All fields required.');
+  const btn=document.getElementById('li-btn');
+  btn.disabled=true;btn.innerHTML='<div class="spinner"></div> Unlocking...';
+  try{
+    showMsg(msgEl,'info','Reading config...');
+    const result=await readLatestVersionedFile(CONFIG_FILE_PREFIX,null,username);
+    if(!result)throw new Error('No config file found. Please sign up first.');
+    let configJson;
+    try{configJson=await decryptText(new TextDecoder().decode(result.data),key)}
+    catch{throw new Error('Invalid vault key or corrupted config.')}
+    const config=JSON.parse(configJson);
     let pat;
-    try {
-      const patDec = await decryptBytes(patBytes, pass);
-      pat = new TextDecoder().decode(patDec);
-      if (!pat.startsWith('ghp_') && !pat.startsWith('github_pat_') && pat.length < 10) {
-        throw new Error('Decrypted PAT looks invalid — may be a wrong password.');
-      }
-    } catch(e) {
-      throw new Error('Could not decrypt PAT: ' + e.message);
-    }
+    try{pat=await decryptText(config.encPat,key)}
+    catch{throw new Error('Failed to decrypt PAT.')}
+    const user=await ghReq('GET','/user',null,pat);
+    if(user.login.toLowerCase()!==username.toLowerCase())throw new Error('PAT mismatch.');
+    session={username,pat,key,config,configFilename:result.filename};
+    Object.keys(_versionCounters).forEach(k=>delete _versionCounters[k]);
+    Object.keys(_folderMetaCache).forEach(k=>delete _folderMetaCache[k]);
+    if(result.filename){const n=parseInt(result.filename.slice(CONFIG_FILE_PREFIX.length).replace('.enc',''))||1;_versionCounters[CONFIG_FILE_PREFIX]=n}
+    showMsg(msgEl,'success','Vault unlocked!');
+    await sleep(500);enterApp();
+  }catch(e){showMsg(msgEl,'error',e.message)}
+  finally{btn.disabled=false;btn.innerHTML='<span>Unlock Vault</span>'}
+}
 
-    SESSION.pat = pat; SESSION.username = username; SESSION.password = pass;
-
-    setAlert('login-alert', 'Loading vault session...', 'info');
-    try {
-      await loadSession();
-    } catch(e) {
-      SESSION.vaultSession = { version:1, files:[], folders:[], repoStats:{} };
-    }
-
-    launchApp();
-  } catch(e) {
-    const msg = e.message || 'Login failed';
-    const isCorrupted = msg.includes('cannot be decrypted') || msg.includes('re-initialized') || msg.includes('corrupted');
-    if (isCorrupted) {
-      const el = document.getElementById('login-alert');
-      el.innerHTML = `
-        <div class="alert alert-error" style="white-space:pre-line">${escHtml(msg)}</div>
-        <div style="margin-top:0.75rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
-          <button class="btn btn-danger btn-sm" onclick="resetVaultAndReSignup()">🗑 Delete Config Repo &amp; Re-signup</button>
-          <button class="btn btn-ghost btn-sm" onclick="switchTab('signup')">Go to Sign Up</button>
-        </div>`;
-    } else {
-      setAlert('login-alert', msg);
+async function readLatestVersionedFile(prefix,pat,username){
+  const effectivePat=pat||(session&&session.pat)||null;
+  const authHeader=effectivePat?`token ${effectivePat}`:null;
+  const listRes=await fetch(`${GH}/repos/${username}/${CONFIG_REPO}/contents/`,{headers:{...(authHeader?{'Authorization':authHeader}:{}),'Accept':'application/vnd.github.v3+json'}});
+  if(!listRes.ok){
+    if(listRes.status===404)throw new Error('Config repo not found. Please sign up first.');
+    if(listRes.status===409)throw new Error('Config repo is empty. Please sign up first.');
+    throw new Error(`GitHub error ${listRes.status}`);
+  }
+  const files=await listRes.json();
+  if(!Array.isArray(files))throw new Error('Unexpected response from GitHub.');
+  let best=null,bestNum=-1;
+  for(const f of files){
+    if(f.name.startsWith(prefix)&&f.type==='file'){
+      const n=parseInt(f.name.slice(prefix.length).replace('.enc',''))||0;
+      if(n>bestNum){bestNum=n;best=f}
     }
   }
-  spin.classList.add('hidden');
+  if(!best)return null;
+  const rawRes=await fetch(`${GH}/repos/${username}/${CONFIG_REPO}/contents/${best.name}`,{headers:{...(authHeader?{'Authorization':authHeader}:{}),'Accept':'application/vnd.github.v3.raw'}});
+  if(!rawRes.ok)throw new Error(`Failed to fetch ${best.name}: ${rawRes.status}`);
+  return{data:new Uint8Array(await rawRes.arrayBuffer()),filename:best.name};
 }
 
-async function resetVaultAndReSignup() {
-  const username = document.getElementById('login-user').value.trim();
-  const pass     = document.getElementById('login-pass').value;
-  if (!username) return setAlert('login-alert', 'Enter your username first.');
+// ── APP STATE ────────────────────────────────────────────────────
+let currentPath=[],currentFolderMeta=null,selectedItems=new Set();
+const ROOT_META_ID='root';
+const _folderMetaCache={};
 
-  if (!confirm('This will permanently delete the cloudvault-config repository.\nYour storage repos will remain on GitHub.\nAre you sure?')) return;
+function enterApp(){
+  showScreen('app');
+  document.getElementById('chip-username').textContent=session.username;
+  currentPath=[];loadFolder(ROOT_META_ID);setupDragDrop();updateStats();
+}
 
-  const pat = prompt('Enter your GitHub PAT to authorize deletion:');
-  if (!pat) return;
+function folderPrefix(id){return id==='root'?ROOT_META_PREFIX:`folder_${id}_v`}
 
-  setAlert('login-alert', 'Deleting config repo...', 'info');
-  try {
-    const r = await fetch(`https://api.github.com/repos/${username}/${CONFIG_REPO}`, {
-      method: 'DELETE',
-      headers: { Authorization: `token ${pat}`, Accept: 'application/vnd.github+json' }
-    });
-    if (!r.ok && r.status !== 404) {
-      const e = await r.json();
-      throw new Error(e.message || 'Delete failed: ' + r.status);
-    }
-    setAlert('login-alert', '✓ Config repo deleted. You can now sign up again with the same username.', 'success');
-    document.getElementById('signup-user').value  = username;
-    document.getElementById('signup-pat').value   = pat;
-    if (pass) document.getElementById('signup-pass').value = pass;
-    setTimeout(() => switchTab('signup'), 1500);
-  } catch(e) {
-    setAlert('login-alert', 'Reset failed: ' + e.message);
+async function loadFolderMeta(folderId){
+  const{pat,key,username}=session;
+  const prefix=folderPrefix(folderId);
+  if(_folderMetaCache[folderId])return _folderMetaCache[folderId];
+  delete _versionCounters[prefix];
+  const result=await readLatestVersionedFile(prefix,pat,username);
+  if(!result){
+    if(folderId==='root'){const f={id:'root',name:'root',folders:[],files:[],createdAt:Date.now(),updatedAt:Date.now()};_folderMetaCache[folderId]=f;return f}
+    throw new Error(`Folder metadata not found: ${folderId}`);
   }
+  const meta=JSON.parse(await decryptText(new TextDecoder().decode(result.data),key));
+  meta._filename=result.filename;
+  _versionCounters[prefix]=parseInt(result.filename.slice(prefix.length).replace('.enc',''))||1;
+  _folderMetaCache[folderId]=meta;return meta;
 }
 
-function doLogout() {
-  SESSION = { pat:null, username:null, password:null, vaultSession:{version:1,files:[],folders:[],repoStats:{}} };
-  _currentSessionN = -1;
-  currentPath = [];
-  document.getElementById('main-app').classList.remove('active');
-  document.getElementById('auth-screen').style.display='flex';
+async function saveFolderMeta(meta){
+  const{pat,key,username}=session;
+  meta.updatedAt=Date.now();
+  const newFilename=await saveVersionedFile(folderPrefix(meta.id),await encryptText(JSON.stringify({...meta,_filename:undefined}),key),pat,username);
+  meta._filename=newFilename;_folderMetaCache[meta.id]=meta;return meta;
 }
 
-function launchApp() {
-  document.getElementById('auth-screen').style.display='none';
-  document.getElementById('main-app').classList.add('active');
-  document.getElementById('topbar-username').textContent = SESSION.username;
-  renderFileList();
-  updateStorageBar();
+async function loadFolder(folderId,forceRefresh=false){
+  showLoading(true);selectedItems.clear();updateSelectionButtons();
+  try{
+    if(forceRefresh)delete _folderMetaCache[folderId];
+    currentFolderMeta=await loadFolderMeta(folderId);renderFolder();
+  }catch(e){alert('Error loading folder: '+e.message)}
+  finally{showLoading(false)}
 }
 
-function updateStorageBar() {
-  // No sidebar — stats tracked internally only
-}
-
-function renderFileList() {
-  const { files, folders } = getFolderContents(currentPath);
-  renderBreadcrumb();
-  const container = document.getElementById('file-list');
-
-  if (files.length === 0 && folders.length === 0) {
-    container.innerHTML = `<div class="empty-state">
-      <div class="empty-icon">☁</div>
-      <p>This folder is empty</p>
-      <p style="font-size:0.77rem">Drop files here or click Upload</p>
-    </div>`;
-    return;
-  }
-
-  if (viewMode === 'grid') {
-    let html = '<div class="file-grid">';
-    folders.forEach(f => { html += folderCardHTML(f); });
-    files.forEach(f => { html += fileCardHTML(f); });
-    html += '</div>';
-    container.innerHTML = html;
-  } else {
-    let html = `<table class="file-table"><thead><tr>
-      <th>Name</th><th>Type</th><th>Size</th><th>Uploaded</th><th>Actions</th>
-    </tr></thead><tbody>`;
-    folders.forEach(f => { html += folderRowHTML(f); });
-    files.forEach(f => { html += fileRowHTML(f); });
-    html += '</tbody></table>';
-    container.innerHTML = html;
-  }
-}
-
-function fileIcon(name) {
-  const ext = name.split('.').pop().toLowerCase();
-  const map = {
-    pdf:'📄', png:'🖼', jpg:'🖼', jpeg:'🖼', gif:'🖼', webp:'🖼', svg:'🖼',
-    mp4:'🎬', mov:'🎬', avi:'🎬', mkv:'🎬', webm:'🎬',
-    mp3:'🎵', wav:'🎵', flac:'🎵', ogg:'🎵',
-    zip:'🗜', rar:'🗜', tar:'🗜', gz:'🗜', '7z':'🗜',
-    js:'📝', ts:'📝', py:'📝', java:'📝', c:'📝', cpp:'📝', html:'📝', css:'📝',
-    txt:'📃', md:'📃', doc:'📃', docx:'📃', xls:'📊', xlsx:'📊', csv:'📊',
-    ppt:'📊', pptx:'📊', json:'📝', xml:'📝',
+// ── ICONS ─────────────────────────────────────────────────────────
+function getListIcon(item){
+  const ext=item._type==='folder'?'__folder':(item.name||'').split('.').pop().toLowerCase();
+  const typeMap={
+    jpg:'image',jpeg:'image',png:'image',gif:'image',webp:'image',svg:'image',bmp:'image',heic:'image',
+    mp4:'video',mkv:'video',avi:'video',mov:'video',webm:'video',flv:'video',
+    mp3:'audio',wav:'audio',flac:'audio',ogg:'audio',aac:'audio',m4a:'audio',
+    pdf:'pdf',
+    doc:'doc',docx:'doc',txt:'text',md:'text',rtf:'text',
+    xls:'sheet',xlsx:'sheet',csv:'sheet',
+    ppt:'slides',pptx:'slides',
+    zip:'archive',rar:'archive','7z':'archive',tar:'archive',gz:'archive',bz2:'archive',
+    js:'code',ts:'code',py:'code',html:'code',css:'code',json:'code',xml:'code',sh:'code',cpp:'code',c:'code',java:'code',rs:'code',go:'code',rb:'code',php:'code',
+    __folder:'folder'
   };
-  return map[ext] || '📦';
-}
-
-function fmtSize(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
-  return (bytes/(1024*1024)).toFixed(1) + ' MB';
-}
-
-function fmtDate(iso) {
-  try { return new Date(iso).toLocaleDateString(); } catch(e) { return '—'; }
-}
-
-function folderCardHTML(f) {
-  return `<div class="file-card" ondblclick="openFolder('${f.id}')" onclick="openFolder('${f.id}')">
-    <span class="file-icon">📁</span>
-    <div class="file-name">${escHtml(f.name)}</div>
-    <div class="file-meta">Folder</div>
-    <div class="file-actions-hover">
-      <button class="icon-btn del" onclick="deleteFolderUI('${f.id}',event)" title="Delete">🗑</button>
-    </div>
-  </div>`;
-}
-
-function fileCardHTML(f) {
-  return `<div class="file-card" oncontextmenu="showCtxMenu(event,'${f.id}')">
-    <span class="file-icon">${fileIcon(f.name)}</span>
-    <div class="file-name">${escHtml(f.name)}</div>
-    <div class="file-meta">${fmtSize(f.size)} · ${fmtDate(f.uploadedAt)}</div>
-    <div class="file-actions-hover">
-      <button class="icon-btn" onclick="downloadFile('${f.id}')" title="Download">⬇</button>
-      <button class="icon-btn del" onclick="deleteFileUI('${f.id}',event)" title="Delete">🗑</button>
-    </div>
-  </div>`;
-}
-
-function folderRowHTML(f) {
-  return `<tr class="folder" onclick="openFolder('${f.id}')">
-    <td>📁 ${escHtml(f.name)}</td>
-    <td><span class="tag tag-folder">FOLDER</span></td>
-    <td>—</td><td>—</td>
-    <td><button class="icon-btn del btn-sm" onclick="deleteFolderUI('${f.id}',event)">🗑</button></td>
-  </tr>`;
-}
-
-function fileRowHTML(f) {
-  return `<tr>
-    <td>${fileIcon(f.name)} ${escHtml(f.name)}</td>
-    <td><span class="tag tag-file">${f.name.split('.').pop().toUpperCase()}</span></td>
-    <td>${fmtSize(f.size)}</td>
-    <td>${fmtDate(f.uploadedAt)}</td>
-    <td style="display:flex;gap:0.3rem;">
-      <button class="icon-btn btn-sm" onclick="downloadFile('${f.id}')">⬇</button>
-      <button class="icon-btn del btn-sm" onclick="deleteFileUI('${f.id}',event)">🗑</button>
-    </td>
-  </tr>`;
-}
-
-function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-const _navTargets = {};
-let _navIdx = 0;
-
-function renderBreadcrumb() {
-  Object.keys(_navTargets).forEach(k => delete _navTargets[k]);
-  _navIdx = 0;
-
-  const rootKey = 'n' + (_navIdx++);
-  _navTargets[rootKey] = [];
-  let html = `<span class="breadcrumb-item" onclick="_nav('${rootKey}')">My Vault</span>`;
-
-  currentPath.forEach((seg, i) => {
-    html += `<span class="breadcrumb-sep">/</span>`;
-    if (i === currentPath.length - 1) {
-      html += `<span class="breadcrumb-item current">${escHtml(seg)}</span>`;
-    } else {
-      const key = 'n' + (_navIdx++);
-      _navTargets[key] = currentPath.slice(0, i + 1);
-      html += `<span class="breadcrumb-item" onclick="_nav('${key}')">${escHtml(seg)}</span>`;
-    }
-  });
-
-  document.getElementById('breadcrumb').innerHTML = html;
-}
-
-function _nav(key) {
-  if (_navTargets[key]) navTo(_navTargets[key]);
-}
-
-function navTo(pathArr) {
-  currentPath = pathArr;
-  renderFileList();
-}
-
-function openFolder(folderId) {
-  const folder = SESSION.vaultSession.folders.find(f=>f.id===folderId);
-  if (!folder) return;
-  const parts = folder.path.split('/').filter(Boolean);
-  currentPath = parts;
-  renderFileList();
-}
-
-function setView(v) {
-  viewMode = v;
-  document.getElementById('btn-grid').classList.toggle('active', v==='grid');
-  document.getElementById('btn-list').classList.toggle('active', v==='list');
-  renderFileList();
-}
-
-function showNewFolder() {
-  const input   = document.getElementById('folder-name-input');
-  const btn     = document.getElementById('folder-create-btn');
-  const cancelBtn = document.getElementById('folder-cancel-btn');
-  const closeBtn  = document.getElementById('folder-modal-close');
-  const status  = document.getElementById('folder-status');
-  input.value = '';
-  input.disabled = false;
-  btn.disabled = false;
-  btn.innerHTML = 'CREATE';
-  cancelBtn.disabled = false;
-  closeBtn.disabled = false;
-  status.style.display = 'none';
-  status.innerHTML = '';
-  openModal('folder-modal');
-  setTimeout(() => input.focus(), 50);
-}
-
-function createFolder() {
-  const name   = document.getElementById('folder-name-input').value.trim();
-  const status = document.getElementById('folder-status');
-  if (!name) return;
-
-  const pathStr = [...currentPath, name].join('/');
-
-  if (SESSION.vaultSession.folders.some(f => f.path === pathStr)) {
-    status.style.cssText = 'display:flex;align-items:center;gap:.6rem;padding:.6rem .75rem;border-radius:2px;margin-top:.25rem;font-size:.85rem;background:rgba(239,68,68,0.1);border:1px solid var(--danger);color:#fca5a5;';
-    status.innerHTML = '&#x2715; A folder with that name already exists here.';
-    return;
-  }
-
-  const id = 'f_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
-  SESSION.vaultSession.folders.push({ id, name, path: pathStr });
-
-  closeModal('folder-modal');
-  renderFileList();
-  bgSync();
-}
-
-async function deleteFolderUI(folderId, e) {
-  if (e) e.stopPropagation();
-  const folder = SESSION.vaultSession.folders.find(f=>f.id===folderId);
-  if (!folder) return;
-  if (!confirm('Delete folder "' + folder.name + '" and all its contents?')) return;
-
-  SESSION.vaultSession.folders = SESSION.vaultSession.folders.filter(f => !f.path.startsWith(folder.path));
-  renderFileList();
-  bgSync();
-
-  const filesToDelete = SESSION.vaultSession.files.filter(f =>
-    f.path.startsWith(folder.path + '/') || f.path === folder.path + '/' + f.name
-  );
-  if (filesToDelete.length > 0) {
-    for (const file of filesToDelete) await deleteFileChunks(file);
-    SESSION.vaultSession.files = SESSION.vaultSession.files.filter(f => !filesToDelete.find(d=>d.id===f.id));
-    await saveSession();
-    updateStorageBar();
-  }
-}
-
-function triggerUpload() {
-  pendingUploadFiles = [];
-
-  document.getElementById('upload-select-area').classList.remove('hidden');
-  document.getElementById('selected-files').innerHTML = '';
-
-  document.getElementById('upload-progress-area').classList.add('hidden');
-  document.getElementById('upload-log').innerHTML = '';
-  document.getElementById('upload-progress-bar').style.width = '0%';
-  document.getElementById('progress-pct').textContent = '0%';
-  document.getElementById('progress-label-text').textContent = 'Preparing...';
-  setUploadStatus('idle');
-
-  const foot = document.getElementById('upload-modal-foot');
-  foot.classList.remove('hidden');
-  foot.innerHTML = `
-    <button class="btn btn-ghost btn-sm" id="upload-cancel-btn" onclick="closeModal('upload-modal')">Cancel</button>
-    <button class="btn btn-primary btn-sm" id="start-upload-btn" onclick="startUpload()" disabled>START UPLOAD</button>`;
-
-  const closeBtn = document.getElementById('upload-close-btn');
-  if (closeBtn) closeBtn.disabled = false;
-
-  openModal('upload-modal');
-}
-
-function setUploadStatus(state, text) {
-  const banner = document.getElementById('upload-status-banner');
-  const textEl = document.getElementById('upload-status-text');
-  if (!banner || !textEl) return;
-  const states = {
-    idle:    { bg:'rgba(0,229,255,0.06)',    border:'rgba(0,229,255,0.2)',    color:'var(--accent)',  icon:'<span class="spinner"></span>' },
-    working: { bg:'rgba(0,229,255,0.06)',    border:'rgba(0,229,255,0.2)',    color:'var(--accent)',  icon:'<span class="spinner"></span>' },
-    success: { bg:'rgba(16,185,129,0.1)',    border:'var(--accent3)',          color:'#6ee7b7',        icon:'✓' },
-    error:   { bg:'rgba(239,68,68,0.1)',     border:'var(--danger)',           color:'#fca5a5',        icon:'✕' },
-    warn:    { bg:'rgba(245,158,11,0.1)',    border:'var(--warn)',             color:'#fcd34d',        icon:'⚠' },
+  const type=typeMap[ext]||'file';
+  const icons={
+    folder:`<svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>`,
+    image:`<svg viewBox="0 0 24 24" fill="none" stroke="#34d9f0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+    video:`<svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="15" height="16"/><polygon points="22 8 17 12 22 16 22 8"/></svg>`,
+    audio:`<svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
+    pdf:`<svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>`,
+    doc:`<svg viewBox="0 0 24 24" fill="none" stroke="#7c6fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>`,
+    text:`<svg viewBox="0 0 24 24" fill="none" stroke="#a9aac4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>`,
+    sheet:`<svg viewBox="0 0 24 24" fill="none" stroke="#3ddba8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>`,
+    slides:`<svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
+    archive:`<svg viewBox="0 0 24 24" fill="none" stroke="#34d9f0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>`,
+    code:`<svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
+    file:`<svg viewBox="0 0 24 24" fill="none" stroke="#6b6c8a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`
   };
-  const s = states[state] || states.idle;
-  banner.style.background = s.bg;
-  banner.style.border = '1px solid ' + s.border;
-  banner.style.color = s.color;
-  banner.innerHTML = s.icon + ' <span id="upload-status-text">' + (text||'') + '</span>';
+  return icons[type]||icons.file;
 }
 
-function setProgress(pct, label) {
-  const bar = document.getElementById('upload-progress-bar');
-  const pctEl = document.getElementById('progress-pct');
-  const lblEl = document.getElementById('progress-label-text');
-  if (bar) bar.style.width = pct + '%';
-  if (pctEl) pctEl.textContent = Math.round(pct) + '%';
-  if (lblEl && label) lblEl.textContent = label;
-}
-
-function addLog(containerId, msg, type='') {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  const line = document.createElement('div');
-  line.className = 'log-line ' + type;
-  const now = new Date();
-  const ts = now.toTimeString().slice(0,8);
-  line.textContent = '[' + ts + '] ' + msg;
-  el.appendChild(line);
-  el.scrollTop = el.scrollHeight;
-}
-
-function onFilesSelected(fileList) {
-  pendingUploadFiles = Array.from(fileList);
-  if (pendingUploadFiles.length === 0) return;
-
-  const totalSize = pendingUploadFiles.reduce((a, f) => a + f.size, 0);
-  let html = `<div style="font-size:0.77rem;color:var(--muted);margin-bottom:0.5rem;">${pendingUploadFiles.length} file(s) selected · ${fmtSize(totalSize)} total</div>`;
-  pendingUploadFiles.forEach(f => {
-    html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.35rem 0.5rem;border-bottom:1px solid var(--border);font-size:0.83rem;">
-      <span>${fileIcon(f.name)} ${escHtml(f.name)}</span>
-      <span style="color:var(--muted);font-size:0.77rem;flex-shrink:0;margin-left:0.5rem">${fmtSize(f.size)}</span>
-    </div>`;
-  });
-  document.getElementById('selected-files').innerHTML = html;
-
-  const startBtn = document.getElementById('start-upload-btn');
-  if (startBtn) startBtn.disabled = false;
-}
-
-function onDragOver(e) {
-  e.preventDefault();
-  document.getElementById('drop-overlay').classList.add('active');
-}
-function onDragLeave(e) { document.getElementById('drop-overlay').classList.remove('active'); }
-function onDrop(e) {
-  e.preventDefault();
-  document.getElementById('drop-overlay').classList.remove('active');
-  const files = Array.from(e.dataTransfer.files);
-  if (files.length === 0) return;
-  triggerUpload();
-  setTimeout(() => onFilesSelected(files), 50);
-}
-
-function getNextChunkSlot() {
-  const stats = SESSION.vaultSession.repoStats;
-  for (let i = 1; ; i++) {
-    const repoName = STORAGE_REPO_PREFIX + i;
-    const count = stats[repoName] || 0;
-    if (count < CHUNKS_PER_REPO) return { repo: repoName };
+// ── RENDER FOLDER ─────────────────────────────────────────────────
+function renderFolder(){
+  const grid=document.getElementById('file-grid');
+  const header=document.getElementById('file-list-header');
+  const empty=document.getElementById('empty-state');
+  grid.innerHTML='';
+  const items=[...(currentFolderMeta.folders||[]).map(f=>({...f,_type:'folder'})),...(currentFolderMeta.files||[]).map(f=>({...f,_type:'file'}))];
+  if(items.length===0){grid.style.display='none';header.style.display='none';empty.classList.remove('hidden');updateBreadcrumb();return}
+  empty.classList.add('hidden');grid.style.display='flex';header.style.display='grid';
+  for(const item of items){
+    const card=document.createElement('div');
+    card.className='file-card';
+    card.dataset.id=item.id;card.dataset.type=item._type;
+    const sizeStr=item._type==='file'?formatSize(item.size||0):'—';
+    const dateStr=new Date(item.updatedAt||item.createdAt||Date.now()).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    card.innerHTML=`<div class="file-card-name-cell"><span class="file-type-icon">${getListIcon(item)}</span><span class="file-name">${escHtml(item.name)}</span></div><div class="file-size-cell">${sizeStr}</div><div class="file-date-cell">${dateStr}</div><button class="file-card-menu" onclick="showItemMenu(event,'${item.id}','${item._type}')">⋮</button>`;
+    if(item._type==='folder'){
+      card.addEventListener('dblclick',()=>openFolder(item));
+      card.addEventListener('click',(e)=>{if(!e.target.classList.contains('file-card-menu'))toggleSelect(item.id,card)});
+    }else{
+      card.addEventListener('click',(e)=>{if(!e.target.classList.contains('file-card-menu'))toggleSelect(item.id,card)});
+      card.addEventListener('dblclick',()=>isImage(item)?previewImage(item):downloadFile(item));
+    }
+    grid.appendChild(card);
   }
+  updateBreadcrumb();
 }
 
-async function ensureStorageRepo(repoName) {
-  const exists = await ghRepoExists(SESSION.pat, SESSION.username, repoName);
-  if (!exists) {
-    addLog('upload-log', `Creating new storage repo: ${repoName}...`, 'info');
-    setUploadStatus('working', `Creating repo ${repoName} on GitHub...`);
-    await ghCreateRepo(SESSION.pat, SESSION.username, repoName, 'CloudVault encrypted storage');
-    addLog('upload-log', `Waiting for ${repoName} to initialize...`, 'info');
-    await new Promise(r => setTimeout(r, 3000));
-    addLog('upload-log', `✓ Repo ${repoName} ready`, 'ok');
-  }
+// ── NAVIGATION ────────────────────────────────────────────────────
+async function openFolder(folder){currentPath.push({id:folder.id,name:folder.name});await loadFolder(folder.id)}
+async function navigateToPath(index){
+  if(index===-1){currentPath=[];await loadFolder(ROOT_META_ID)}
+  else{const seg=currentPath[index];currentPath=currentPath.slice(0,index+1);await loadFolder(seg.id)}
+}
+function updateBreadcrumb(){
+  const el=document.getElementById('breadcrumb');
+  let html=`<span class="path-seg" onclick="navigateToPath(-1)">/ root</span>`;
+  for(let i=0;i<currentPath.length;i++){const seg=currentPath[i];html+=`<span class="path-sep"> / </span><span class="path-seg" onclick="navigateToPath(${i})">${escHtml(seg.name)}</span>`}
+  el.innerHTML=html;
 }
 
-async function startUpload() {
-  if (pendingUploadFiles.length === 0) return;
+// ── NEW FOLDER ────────────────────────────────────────────────────
+function showNewFolderModal(){
+  showModal(`<h3>New Folder</h3><div class="field"><label>Folder Name</label><input type="text" id="new-folder-name" placeholder="my folder"/></div><div id="new-folder-msg"></div><div style="display:flex;gap:0.75rem;margin-top:0.5rem"><button class="btn btn-primary" style="margin-top:0" onclick="createFolder()">Create Folder</button><button class="btn btn-ghost" style="margin-top:0" onclick="closeModal()">Cancel</button></div>`);
+  setTimeout(()=>document.getElementById('new-folder-name').focus(),100);
+}
+async function createFolder(){
+  const name=document.getElementById('new-folder-name').value.trim();
+  if(!name)return;
+  const msgEl=document.getElementById('new-folder-msg');
+  showMsg(msgEl,'info','Creating folder...');
+  try{
+    const folderId=`f_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+    const newMeta={id:folderId,name,folders:[],files:[],createdAt:Date.now(),updatedAt:Date.now()};
+    await saveFolderMeta(newMeta);
+    if(!currentFolderMeta.folders)currentFolderMeta.folders=[];
+    currentFolderMeta.folders.push({id:folderId,name,createdAt:Date.now()});
+    await saveFolderMeta(currentFolderMeta);
+    closeModal();renderFolder();
+  }catch(e){showMsg(msgEl,'error',e.message)}
+}
 
-  const startBtn    = document.getElementById('start-upload-btn');
-  const cancelBtn   = document.getElementById('upload-cancel-btn');
-  const closeBtn    = document.getElementById('upload-close-btn');
-  if (startBtn)  startBtn.disabled  = true;
-  if (cancelBtn) cancelBtn.disabled = true;
-  if (closeBtn)  closeBtn.disabled  = true;
+// ── UPLOAD ────────────────────────────────────────────────────────
+const CHUNK_SIZE=20*1024*1024;
+const MAX_FILES_PER_REPO=20;
+let _uploadCounter=0;
 
-  document.getElementById('upload-select-area').classList.add('hidden');
-  document.getElementById('upload-progress-area').classList.remove('hidden');
-  document.getElementById('upload-log').innerHTML = '';
-  document.getElementById('upload-modal-foot').classList.add('hidden');
+function triggerUpload(){document.getElementById('file-input').click()}
+function handleFileSelect(e){const files=Array.from(e.target.files);e.target.value='';if(files.length>0)uploadFiles(files)}
 
-  setProgress(0, 'Starting...');
-  setUploadStatus('working', 'Preparing upload...');
-
-  let successCount = 0;
-  let errorCount   = 0;
-  const totalFiles = pendingUploadFiles.length;
-
-  for (let fi = 0; fi < totalFiles; fi++) {
-    const file = pendingUploadFiles[fi];
-    const fileLabel = `${file.name} (${fmtSize(file.size)})`;
-    addLog('upload-log', `━━━ File ${fi+1}/${totalFiles}: ${fileLabel} ━━━`, 'info');
-    setUploadStatus('working', `File ${fi+1}/${totalFiles}: ${file.name}`);
-
-    try {
-      addLog('upload-log', `Reading file into memory...`, '');
-      const arrayBuffer = await file.arrayBuffer();
-      const fileBytes   = new Uint8Array(arrayBuffer);
-
-      const chunks = [];
-      for (let offset = 0; offset < fileBytes.length; offset += CHUNK_SIZE) {
-        chunks.push(fileBytes.slice(offset, offset + CHUNK_SIZE));
-      }
-      if (chunks.length === 0) chunks.push(new Uint8Array(0));
-      addLog('upload-log', `${chunks.length} chunk(s) · ${fmtSize(CHUNK_SIZE)} each`, '');
-
-      const chunkMeta = [];
-      let nextEncPromise = encryptBytes(chunks[0], SESSION.password);
-
-      for (let ci = 0; ci < chunks.length; ci++) {
-        const chunkNum = ci + 1;
-        const pct = ((fi + (ci / chunks.length)) / totalFiles) * 95;
-        setProgress(pct, `File ${fi+1}/${totalFiles} · Chunk ${chunkNum}/${chunks.length}`);
-        setUploadStatus('working', `Uploading chunk ${chunkNum}/${chunks.length} of "${file.name}"...`);
-
-        const encChunk = await nextEncPromise;
-        const chunkB64 = b64Encode(encChunk);
-
-        if (ci + 1 < chunks.length) {
-          nextEncPromise = encryptBytes(chunks[ci + 1], SESSION.password);
-        }
-
-        const { repo } = getNextChunkSlot();
-        await ensureStorageRepo(repo);
-
-        const chunkFileName = `c${Date.now()}${ci}${Math.random().toString(36).slice(2,5)}.dat`;
-        addLog('upload-log', `↑ Chunk ${chunkNum}/${chunks.length} → ${repo}`, '');
-
-        await ghPut(SESSION.pat, SESSION.username, repo, chunkFileName, chunkB64, undefined, `cv chunk`);
-
-        if (!SESSION.vaultSession.repoStats[repo]) SESSION.vaultSession.repoStats[repo] = 0;
-        SESSION.vaultSession.repoStats[repo]++;
-        chunkMeta.push({ repo, file: chunkFileName });
-        addLog('upload-log', `✓ Chunk ${chunkNum}/${chunks.length} done`, 'ok');
-      }
-
-      const pathStr = [...currentPath, file.name].join('/');
-      const fileId  = 'file_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
-      SESSION.vaultSession.files.push({
-        id: fileId, name: file.name, path: pathStr,
-        size: file.size, type: file.type,
-        uploadedAt: new Date().toISOString(), chunks: chunkMeta
-      });
-
-      setUploadStatus('working', `Saving vault index...`);
-      addLog('upload-log', `Saving vault session...`, 'info');
-      await saveSession();
-      addLog('upload-log', `✓ "${file.name}" complete!`, 'ok');
-      successCount++;
-
-    } catch(e) {
-      errorCount++;
-      addLog('upload-log', `✗ Failed: ${e.message}`, 'err');
-      setUploadStatus('warn', `Error on "${file.name}" — continuing...`);
-      await new Promise(r => setTimeout(r, 800));
+async function uploadFiles(files){
+  const panel=document.getElementById('upload-panel');
+  const list=document.getElementById('upload-list');
+  panel.classList.add('active');
+  for(const file of files){
+    const uid=`up_${++_uploadCounter}`;
+    const itemEl=document.createElement('div');
+    itemEl.className='upload-item';
+    itemEl.innerHTML=`<div class="upload-item-name">${escHtml(file.name)}</div><div class="upload-progress-bar"><div class="upload-progress-fill" id="upfill_${uid}" style="width:0%"></div></div><div class="upload-status" id="upstat_${uid}">Preparing...</div>`;
+    list.appendChild(itemEl);
+    // Store direct element references — immune to DOM changes
+    const fillEl=itemEl.querySelector(`#upfill_${uid}`);
+    const statEl=itemEl.querySelector(`#upstat_${uid}`);
+    const progress=(pct,status)=>{if(fillEl)fillEl.style.width=pct+'%';if(statEl)statEl.textContent=status};
+    try{
+      await uploadSingleFile(file,progress);
+      if(fillEl){fillEl.style.width='100%';fillEl.style.background='var(--success)'}
+      if(statEl)statEl.textContent='✓ Done';
+    }catch(e){
+      if(fillEl)fillEl.style.background='var(--danger)';
+      if(statEl)statEl.textContent='✗ '+e.message;
     }
   }
-
-  setProgress(100, 'Finished');
-  if (errorCount === 0) {
-    addLog('upload-log', `✓ All ${successCount} file(s) uploaded successfully.`, 'ok');
-    setUploadStatus('success', `${successCount} file(s) uploaded successfully`);
-  } else if (successCount === 0) {
-    addLog('upload-log', `✗ All uploads failed. Check errors above.`, 'err');
-    setUploadStatus('error', `All ${errorCount} upload(s) failed — check log`);
-  } else {
-    addLog('upload-log', `Done: ${successCount} succeeded, ${errorCount} failed.`, 'warn');
-    setUploadStatus('warn', `${successCount} succeeded · ${errorCount} failed`);
-  }
-
-  renderFileList();
-  updateStorageBar();
-
-  if (closeBtn) closeBtn.disabled = false;
-  const foot = document.getElementById('upload-modal-foot');
-  foot.innerHTML = `<button class="btn btn-primary btn-sm" onclick="closeModal('upload-modal')">DONE</button>`;
-  foot.classList.remove('hidden');
+  await loadFolder(currentFolderMeta.id);
 }
 
-async function downloadFile(fileId) {
-  const fileObj = SESSION.vaultSession.files.find(f=>f.id===fileId);
-  if (!fileObj) return alert('File not found in vault.');
+async function uploadSingleFile(file,progress){
+  const{pat,key,username,config}=session;
+  const totalSize=file.size;
+  const numChunks=Math.ceil(totalSize/CHUNK_SIZE);
+  const fileId=`file_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+  const chunks=[];
+  progress(0,`0 / ${numChunks} chunks`);
+  for(let i=0;i<numChunks;i++){
+    const start=i*CHUNK_SIZE;
+    const end=Math.min(start+CHUNK_SIZE,totalSize);
+    const chunkData=new Uint8Array(await file.slice(start,end).arrayBuffer());
+    const encChunk=await encryptData(chunkData,key);
+    const repoInfo=await ensureDataRepo();
+    const chunkFilename=`chunk_${fileId}_${i}_v1.enc`;
+    await ghUploadFile(username,repoInfo.name,chunkFilename,encChunk,pat);
+    repoInfo.fileCount=(repoInfo.fileCount||0)+1;
+    chunks.push({chunkIndex:i,repoName:repoInfo.name,filename:chunkFilename});
+    progress(Math.round(((i+1)/numChunks)*90),`${i+1} / ${numChunks} chunks uploaded`);
+  }
+  const fileEntry={id:fileId,name:file.name,size:totalSize,mimeType:file.type||'application/octet-stream',numChunks,chunks,createdAt:Date.now(),updatedAt:Date.now()};
+  if(!currentFolderMeta.files)currentFolderMeta.files=[];
+  currentFolderMeta.files.push(fileEntry);
+  progress(95,'Saving metadata...');
+  await saveFolderMeta(currentFolderMeta);
+  session.config.totalFiles=(session.config.totalFiles||0)+1;
+  session.config.totalSize=(session.config.totalSize||0)+totalSize;
+  await saveConfig();
+  updateStats();
+  progress(100,'Complete');
+}
 
-  const modal = document.createElement('div');
-  modal.className = 'modal-backdrop active';
-  modal.innerHTML = `<div class="modal"><div class="modal-head"><div class="modal-title">Downloading ${escHtml(fileObj.name)}</div></div>
-    <div class="modal-body">
-      <div class="progress-wrap">
-        <div class="progress-label"><span id="dl-label">Preparing...</span><span id="dl-pct">0%</span></div>
-        <div class="progress-track"><div class="progress-fill" id="dl-bar" style="width:0%"></div></div>
+// ── DATA REPOS ────────────────────────────────────────────────────
+async function ensureDataRepo(){
+  const{pat,username,config}=session;
+  for(const repo of(config.dataRepos||[])){if((repo.fileCount||0)<MAX_FILES_PER_REPO)return repo}
+  const repoNum=(config.dataRepos||[]).length+1;
+  const repoName=`vaultdrive-data-${repoNum}`;
+  await createRepo(repoName,pat);
+  await sleep(1500);
+  const newRepo={name:repoName,fileCount:0};
+  if(!config.dataRepos)config.dataRepos=[];
+  config.dataRepos.push(newRepo);
+  await saveConfig();return newRepo;
+}
+async function saveConfig(){
+  const{pat,key,username,config}=session;
+  session.configFilename=await saveVersionedFile(CONFIG_FILE_PREFIX,await encryptText(JSON.stringify(config),key),pat,username);
+}
+
+// ── IMAGE PREVIEW ─────────────────────────────────────────────────
+function isImage(fileEntry){
+  const ext=(fileEntry.name||'').split('.').pop().toLowerCase();
+  return['jpg','jpeg','png','gif','webp','bmp','svg','heic','avif'].includes(ext);
+}
+
+async function previewImage(fileEntry){
+  const{pat,key,username}=session;
+  // Show loading state first
+  showModal(`<div style="padding:3rem;text-align:center;color:var(--text3);font-size:0.82rem"><div class="spinner" style="margin:0 auto 1rem"></div>Loading ${escHtml(fileEntry.name)}...</div>`);
+  document.getElementById('modal-box').classList.add('img-preview');
+  try{
+    const chunks=[...( fileEntry.chunks||[])].sort((a,b)=>a.chunkIndex-b.chunkIndex);
+    const allData=[];let total=0;
+    for(const chunk of chunks){
+      const enc=await ghGetFileRaw(username,chunk.repoName,chunk.filename,pat);
+      const dec=await decryptData(enc,key);
+      allData.push(dec);total+=dec.length;
+    }
+    const merged=new Uint8Array(total);let offset=0;
+    for(const c of allData){merged.set(c,offset);offset+=c.length}
+    const ext=(fileEntry.name||'').split('.').pop().toLowerCase();
+    const mime=ext==='svg'?'image/svg+xml':ext==='jpg'||ext==='jpeg'?'image/jpeg':ext==='png'?'image/png':ext==='gif'?'image/gif':ext==='webp'?'image/webp':ext==='bmp'?'image/bmp':'image/jpeg';
+    const blob=new Blob([merged],{type:mime});
+    const url=URL.createObjectURL(blob);
+    document.getElementById('modal-content').innerHTML=`
+      <div class="img-preview-bar">
+        <span class="img-preview-name">${escHtml(fileEntry.name)}</span>
+        <div class="img-preview-actions">
+          <button class="img-preview-btn" onclick="(()=>{const a=document.createElement('a');a.href='${url}';a.download='${escHtml(fileEntry.name)}';a.click()})()">↓ Save</button>
+          <button class="img-preview-btn" onclick="closeModal()">✕</button>
+        </div>
       </div>
-      <div class="progress-log" id="dl-log"></div>
-    </div></div>`;
-  document.body.appendChild(modal);
+      <div class="img-preview-body"><img src="${url}" alt="${escHtml(fileEntry.name)}" onload="URL.revokeObjectURL(this.src.startsWith('blob')&&'')"/></div>
+    `;
+  }catch(e){
+    document.getElementById('modal-box').classList.remove('img-preview');
+    document.getElementById('modal-content').innerHTML=`<h3>Preview failed</h3><p style="color:var(--danger);font-size:0.82rem">${escHtml(e.message)}</p><button class="btn btn-ghost" onclick="closeModal()">Close</button>`;
+  }
+}
 
-  const dlLog = id => (msg, type='') => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const line = document.createElement('div');
-    line.className = 'log-line ' + type;
-    line.textContent = msg;
-    el.appendChild(line);
-    el.scrollTop = el.scrollHeight;
-  };
-  const log = dlLog('dl-log');
-  const setDlProg = (pct, label) => {
-    const bar = document.getElementById('dl-bar');
-    const pctEl = document.getElementById('dl-pct');
-    const lblEl = document.getElementById('dl-label');
-    if (bar) bar.style.width = pct + '%';
-    if (pctEl) pctEl.textContent = pct + '%';
-    if (lblEl && label) lblEl.textContent = label;
-  };
-
-  try {
-    const allChunkData = [];
-    for (let ci = 0; ci < fileObj.chunks.length; ci++) {
-      const chunk = fileObj.chunks[ci];
-      setDlProg(Math.round((ci/fileObj.chunks.length)*90), `Chunk ${ci+1}/${fileObj.chunks.length}`);
-      log(`Fetching chunk ${ci+1}/${fileObj.chunks.length} from ${chunk.repo}...`, 'info');
-
-      const rawUrl = `https://raw.githubusercontent.com/${SESSION.username}/${chunk.repo}/main/${chunk.file}`;
-      const encBytes = await ghGetRaw(rawUrl);
-      log(`Decrypting chunk ${ci+1}...`, '');
-      const decBytes = await decryptBytes(encBytes, SESSION.password);
-      allChunkData.push(decBytes);
-      log(`✓ Chunk ${ci+1} ready`, 'ok');
+// ── DOWNLOAD ──────────────────────────────────────────────────────
+async function downloadFile(fileEntry){
+  const{pat,key,username}=session;
+  const chunks=fileEntry.chunks||[];
+  // Collect decrypted chunks as separate Uint8Arrays — never merge into one giant buffer
+  const decryptedChunks=[];
+  showModal(`<h3>Downloading ${escHtml(fileEntry.name)}</h3><div class="upload-progress-bar" style="margin:1rem 0"><div class="upload-progress-fill" id="dl-fill" style="width:0%"></div></div><div id="dl-stat" style="font-size:0.8rem;color:var(--text3)">Starting...</div>`);
+  try{
+    const sorted=[...chunks].sort((a,b)=>a.chunkIndex-b.chunkIndex);
+    for(let i=0;i<sorted.length;i++){
+      const chunk=sorted[i];
+      document.getElementById('dl-stat').textContent=`Chunk ${i+1}/${sorted.length}...`;
+      const encBytes=await ghGetFileRaw(username,chunk.repoName,chunk.filename,pat);
+      const decBytes=await decryptData(encBytes,key);
+      decryptedChunks.push(decBytes);
+      document.getElementById('dl-fill').style.width=Math.round(((i+1)/sorted.length)*100)+'%';
     }
-
-    setDlProg(95, 'Assembling file...');
-    log('Assembling chunks...', 'info');
-
-    const totalLen = allChunkData.reduce((a,b)=>a+b.byteLength, 0);
-    const assembled = new Uint8Array(totalLen);
-    let offset = 0;
-    for (const chunk of allChunkData) {
-      assembled.set(chunk, offset);
-      offset += chunk.byteLength;
-    }
-
-    setDlProg(100, 'Done!');
-    log('✓ Download complete!', 'ok');
-
-    const blob = new Blob([assembled], { type: fileObj.type || 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = fileObj.name; a.click();
+    // Pass the array of chunks directly to Blob — no merging, no 2GB limit
+    const blob=new Blob(decryptedChunks,{type:fileEntry.mimeType||'application/octet-stream'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=fileEntry.name;a.click();
     URL.revokeObjectURL(url);
+    document.getElementById('dl-stat').textContent='✓ Download complete!';
+    setTimeout(closeModal,1500);
+  }catch(e){document.getElementById('dl-stat').textContent='✗ Error: '+e.message}
+}
 
-    setTimeout(() => modal.remove(), 1500);
-  } catch(e) {
-    log('✗ Error: ' + e.message, 'err');
-    const foot = document.createElement('div');
-    foot.className = 'modal-foot';
-    foot.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="this.closest('.modal-backdrop').remove()">Close</button>`;
-    modal.querySelector('.modal').appendChild(foot);
+// ── DELETE ────────────────────────────────────────────────────────
+async function deleteFileEntry(fileEntry){
+  session.config.totalFiles=Math.max(0,(session.config.totalFiles||1)-1);
+  session.config.totalSize=Math.max(0,(session.config.totalSize||0)-(fileEntry.size||0));
+  currentFolderMeta.files=(currentFolderMeta.files||[]).filter(f=>f.id!==fileEntry.id);
+}
+async function deleteFolderEntry(folderEntry){
+  const{pat,username}=session;
+  try{
+    const meta=await loadFolderMeta(folderEntry.id);
+    for(const file of(meta.files||[])){session.config.totalFiles=Math.max(0,(session.config.totalFiles||1)-1);session.config.totalSize=Math.max(0,(session.config.totalSize||0)-(file.size||0))}
+    await Promise.allSettled((meta.folders||[]).map(sub=>deleteFolderEntry(sub)));
+    if(meta._filename){try{await ghDeleteFile(username,CONFIG_REPO,meta._filename,pat)}catch(e){}}
+  }catch(e){console.warn('folder delete err:',e.message)}
+  currentFolderMeta.folders=(currentFolderMeta.folders||[]).filter(f=>f.id!==folderEntry.id);
+}
+
+// ── CONTEXT MENU ──────────────────────────────────────────────────
+function showItemMenu(event,itemId,itemType){
+  event.stopPropagation();
+  const menu=document.getElementById('ctx-menu');
+  const item=itemType==='folder'?(currentFolderMeta.folders||[]).find(f=>f.id===itemId):(currentFolderMeta.files||[]).find(f=>f.id===itemId);
+  if(!item)return;
+  menu.innerHTML='';
+  if(itemType==='file'){
+    addCtxItem(menu,'Download',()=>{closeCtxMenu();downloadFile(item)});
+    addCtxItem(menu,'Rename',()=>{closeCtxMenu();renameItem(item,'file')});
+    menu.appendChild(Object.assign(document.createElement('div'),{className:'ctx-sep'}));
+    addCtxItem(menu,'Delete',async()=>{
+      closeCtxMenu();
+      if(!await confirmModal('Delete File',`Delete "${item.name}"? This cannot be undone.`,'Delete','Cancel'))return;
+      showModal('<h3>Deleting...</h3><div class="spinner" style="margin:1rem auto;display:block"></div>');
+      try{await deleteFileEntry(item);await saveFolderMeta(currentFolderMeta);await saveConfig();updateStats();closeModal();renderFolder()}
+      catch(e){closeModal();alert(e.message)}
+    },true);
+  }else{
+    addCtxItem(menu,'Open',()=>{closeCtxMenu();openFolder(item)});
+    addCtxItem(menu,'Rename',()=>{closeCtxMenu();renameItem(item,'folder')});
+    menu.appendChild(Object.assign(document.createElement('div'),{className:'ctx-sep'}));
+    addCtxItem(menu,'Delete',async()=>{
+      closeCtxMenu();
+      if(!await confirmModal('Delete Folder',`Delete "${item.name}" and all its contents?`,'Delete','Cancel'))return;
+      showModal('<h3>Deleting...</h3><div class="spinner" style="margin:1rem auto;display:block"></div>');
+      try{await deleteFolderEntry(item);await saveFolderMeta(currentFolderMeta);await saveConfig();updateStats();closeModal();renderFolder()}
+      catch(e){closeModal();alert(e.message)}
+    },true);
   }
-}
-
-let deleteTargetId = null;
-
-function deleteFileUI(fileId, e) {
-  if (e) e.stopPropagation();
-  const fileObj = SESSION.vaultSession.files.find(f=>f.id===fileId);
-  if (!fileObj) return;
-  deleteTargetId = fileId;
-  document.getElementById('delete-filename').textContent = fileObj.name;
-  document.getElementById('delete-progress').classList.add('hidden');
-  document.getElementById('delete-log').innerHTML = '';
-  document.getElementById('delete-modal-foot').innerHTML = `
-    <button class="btn btn-ghost btn-sm" onclick="closeModal('delete-modal')">Cancel</button>
-    <button class="btn btn-danger btn-sm" onclick="confirmDelete()">DELETE</button>`;
-  openModal('delete-modal');
-}
-
-async function deleteFileChunks(fileObj) {
-  for (const chunk of fileObj.chunks) {
-    try {
-      const meta = await ghGet(SESSION.pat, SESSION.username, chunk.repo, chunk.file);
-      await ghDelete(SESSION.pat, SESSION.username, chunk.repo, chunk.file, meta.sha);
-      if (SESSION.vaultSession.repoStats[chunk.repo]) SESSION.vaultSession.repoStats[chunk.repo]--;
-    } catch(e) {}
-  }
-}
-
-async function confirmDelete() {
-  if (!deleteTargetId) return;
-  const fileObj = SESSION.vaultSession.files.find(f=>f.id===deleteTargetId);
-  if (!fileObj) return;
-
-  document.getElementById('delete-progress').classList.remove('hidden');
-  document.getElementById('delete-modal-foot').innerHTML = '';
-  const log = (msg, type='') => addLog('delete-log', msg, type);
-
-  try {
-    log(`Deleting ${fileObj.chunks.length} chunk(s)...`, 'info');
-    await deleteFileChunks(fileObj);
-    SESSION.vaultSession.files = SESSION.vaultSession.files.filter(f=>f.id!==deleteTargetId);
-    log('Saving vault session...', 'info');
-    await saveSession();
-    log('✓ File deleted', 'ok');
-    renderFileList();
-    updateStorageBar();
-    setTimeout(() => closeModal('delete-modal'), 1000);
-  } catch(e) {
-    log('✗ Error: ' + e.message, 'err');
-    document.getElementById('delete-modal-foot').innerHTML = `<button class="btn btn-ghost btn-sm" onclick="closeModal('delete-modal')">Close</button>`;
-  }
-}
-
-function showCtxMenu(e, fileId) {
-  e.preventDefault();
-  ctxTargetFile = fileId;
-  const menu = document.getElementById('ctx-menu');
   menu.classList.remove('hidden');
-  menu.style.left = e.clientX + 'px';
-  menu.style.top = e.clientY + 'px';
+  const menuW=180;
+  const menuH=menu.children.length*44+8;
+  const x=Math.min(event.clientX, window.innerWidth-menuW-8);
+  const y=Math.min(event.clientY+4, window.innerHeight-menuH-8);
+  menu.style.left=x+'px';
+  menu.style.top=y+'px';
 }
-function ctxDownload() { hideCtxMenu(); if(ctxTargetFile) downloadFile(ctxTargetFile); }
-function ctxDelete() { hideCtxMenu(); if(ctxTargetFile) deleteFileUI(ctxTargetFile); }
-function hideCtxMenu() { document.getElementById('ctx-menu').classList.add('hidden'); }
-document.addEventListener('click', hideCtxMenu);
+function addCtxItem(menu,label,onClick,danger=false){
+  const item=document.createElement('div');
+  item.className='ctx-item'+(danger?' danger':'');
+  item.textContent=label;item.onclick=onClick;menu.appendChild(item);
+}
+function closeCtxMenu(){document.getElementById('ctx-menu').classList.add('hidden')}
+document.addEventListener('click',closeCtxMenu);
 
-function openModal(id) { document.getElementById(id).classList.add('active'); }
-function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+// ── RENAME ────────────────────────────────────────────────────────
+function renameItem(item,type){
+  showModal(`<h3>Rename</h3><div class="field"><label>New Name</label><input type="text" id="rename-input" value="${escHtml(item.name)}"/></div><div id="rename-msg"></div><button class="btn btn-primary" onclick="doRename('${item.id}','${type}')">Rename</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button>`);
+  setTimeout(()=>{const el=document.getElementById('rename-input');el.focus();el.select()},100);
+}
+async function doRename(itemId,type){
+  const newName=document.getElementById('rename-input').value.trim();
+  if(!newName)return;
+  const msgEl=document.getElementById('rename-msg');showMsg(msgEl,'info','Renaming...');
+  try{
+    if(type==='folder'){
+      const folder=currentFolderMeta.folders.find(f=>f.id===itemId);
+      if(folder){folder.name=newName;const sub=await loadFolderMeta(itemId);sub.name=newName;await saveFolderMeta(sub)}
+    }else{const file=currentFolderMeta.files.find(f=>f.id===itemId);if(file)file.name=newName}
+    await saveFolderMeta(currentFolderMeta);closeModal();renderFolder();
+  }catch(e){showMsg(msgEl,'error',e.message)}
+}
 
-document.querySelectorAll('.modal-backdrop').forEach(el => {
-  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('active'); });
-});
+// ── SELECTION ─────────────────────────────────────────────────────
+function toggleSelect(id,card){
+  if(selectedItems.has(id)){selectedItems.delete(id);card.classList.remove('selected')}
+  else{selectedItems.add(id);card.classList.add('selected')}
+  updateSelectionButtons();
+}
+function updateSelectionButtons(){
+  const has=selectedItems.size>0;
+  document.getElementById('btn-download').style.display=has?'':'none';
+  document.getElementById('btn-delete-sel').style.display=has?'':'none';
+}
+async function downloadSelected(){for(const id of selectedItems){const f=(currentFolderMeta.files||[]).find(f=>f.id===id);if(f)await downloadFile(f)}}
+async function deleteSelected(){
+  if(!await confirmModal('Delete Selected',`Delete ${selectedItems.size} selected item(s)?`,'Delete','Cancel'))return;
+  showModal('<h3>Deleting...</h3><div class="spinner" style="margin:1rem auto;display:block"></div>');
+  try{
+    const ps=[];
+    for(const id of selectedItems){
+      const f=(currentFolderMeta.files||[]).find(f=>f.id===id);
+      const folder=(currentFolderMeta.folders||[]).find(f=>f.id===id);
+      if(f)ps.push(deleteFileEntry(f));if(folder)ps.push(deleteFolderEntry(folder));
+    }
+    await Promise.allSettled(ps);selectedItems.clear();
+    await saveFolderMeta(currentFolderMeta);await saveConfig();updateStats();closeModal();renderFolder();
+  }catch(e){closeModal();alert(e.message)}
+}
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.querySelectorAll('.modal-backdrop.active').forEach(m => m.classList.remove('active'));
+// ── DRAG & DROP ───────────────────────────────────────────────────
+function setupDragDrop(){
+  const app=document.getElementById('main-app');
+  const overlay=document.getElementById('drag-overlay');
+  let counter=0;
+  app.addEventListener('dragenter',e=>{e.preventDefault();counter++;if(e.dataTransfer.types.includes('Files'))overlay.classList.add('active')});
+  app.addEventListener('dragleave',()=>{counter--;if(counter===0)overlay.classList.remove('active')});
+  app.addEventListener('dragover',e=>e.preventDefault());
+  app.addEventListener('drop',e=>{e.preventDefault();counter=0;overlay.classList.remove('active');const files=Array.from(e.dataTransfer.files);if(files.length>0)uploadFiles(files)});
+}
+
+// ── STATS ─────────────────────────────────────────────────────────
+function updateStats(){
+  const config=session&&session.config;if(!config)return;
+  document.getElementById('stat-files').textContent=config.totalFiles||0;
+  document.getElementById('stat-size').textContent=formatSize(config.totalSize||0);
+  document.getElementById('stat-folders').textContent=(currentFolderMeta&&currentFolderMeta.folders||[]).length;
+  const maxSize=Math.max((config.dataRepos||[]).length,1)*20*20*1024*1024;
+  const pct=Math.min(((config.totalSize||0)/maxSize)*100,100);
+  document.getElementById('storage-fill').style.width=pct+'%';
+  document.getElementById('storage-text').textContent=`${formatSize(config.totalSize||0)} used`;
+}
+async function refreshCurrentFolder(){if(currentFolderMeta)await loadFolder(currentFolderMeta.id,true)}
+
+// ── UI HELPERS ────────────────────────────────────────────────────
+function showScreen(name){
+  document.getElementById('screen-signup').classList.add('hidden');
+  document.getElementById('screen-login').classList.add('hidden');
+  document.getElementById('main-app').classList.remove('active');
+  if(name==='signup')document.getElementById('screen-signup').classList.remove('hidden');
+  else if(name==='login')document.getElementById('screen-login').classList.remove('hidden');
+  else if(name==='app')document.getElementById('main-app').classList.add('active');
+}
+function showLoading(show){
+  document.getElementById('loading-state').style.display=show?'':'none';
+  document.getElementById('file-grid').style.display=show?'none':'';
+  document.getElementById('file-list-header').style.display='none';
+  if(show)document.getElementById('empty-state').classList.add('hidden');
+}
+function showMsg(el,type,text){el.innerHTML=`<div class="msg msg-${type}">${escHtml(text)}</div>`}
+function showModal(html){document.getElementById('modal-content').innerHTML=html;document.getElementById('modal-overlay').classList.remove('hidden')}
+function closeModal(event){
+  if(event&&event.target!==document.getElementById('modal-overlay'))return;
+  document.getElementById('modal-overlay').classList.add('hidden');
+  document.getElementById('modal-content').innerHTML='';
+  document.getElementById('modal-box').classList.remove('img-preview');
+}
+window.closeModal=()=>{
+  document.getElementById('modal-overlay').classList.add('hidden');
+  document.getElementById('modal-content').innerHTML='';
+  document.getElementById('modal-box').classList.remove('img-preview');
+};
+function confirmModal(title,message,okLabel,cancelLabel){
+  return new Promise(resolve=>{
+    showModal(`<h3>${escHtml(title)}</h3><p style="color:var(--text2);font-size:0.85rem;margin:1rem 0;line-height:1.6">${escHtml(message)}</p><button class="btn btn-danger" onclick="window._confirmResolve(true)">${escHtml(okLabel)}</button><button class="btn btn-ghost" onclick="window._confirmResolve(false)">${escHtml(cancelLabel)}</button>`);
+    window._confirmResolve=val=>{window.closeModal();resolve(val)};
+  });
+}
+function closeUploadPanel(){document.getElementById('upload-panel').classList.remove('active');document.getElementById('upload-list').innerHTML=''}
+async function doLogout(){
+  const ok=await confirmModal('Log Out','Are you sure you want to log out?','Log Out','Cancel');
+  if(!ok)return;
+  session=null;currentPath=[];currentFolderMeta=null;
+  Object.keys(_versionCounters).forEach(k=>delete _versionCounters[k]);
+  Object.keys(_folderMetaCache).forEach(k=>delete _folderMetaCache[k]);
+  showScreen('login');
+}
+function formatSize(bytes){
+  if(bytes===0)return'0 B';
+  const units=['B','KB','MB','GB','TB'];
+  const i=Math.floor(Math.log(bytes)/Math.log(1024));
+  return(bytes/Math.pow(1024,i)).toFixed(1)+' '+units[i];
+}
+function escHtml(str){return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+// ── INIT ──────────────────────────────────────────────────────────
+showScreen('login');
+
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Enter')return;
+  const active=document.activeElement;if(!active)return;
+  if(['su-username','su-pat','su-key','su-key2'].includes(active.id)){e.preventDefault();doSignup();return}
+  if(['li-username','li-key'].includes(active.id)){e.preventDefault();doLogin();return}
+  if(active.id==='new-folder-name'){e.preventDefault();createFolder();return}
+  if(active.id==='rename-input'){e.preventDefault();const btn=document.querySelector('#modal-content .btn-primary');if(btn)btn.click();return}
 });
 </script>
 </body>
